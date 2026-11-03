@@ -30,6 +30,10 @@ REFUND_TTL = 300  # seconds to post it in: nobody is meant to take the job
 CLAIM_STATUS = {0: 'none', 1: 'claimed', 2: 'accepted', 3: 'rejected'}
 AMOUNTS = {'Reserved': ('bond', 'cover'), 'Settled': ('paid', 'price'), 'Rejected': ('bond', 'surplus'),
            'Voided': ('comp', 'compToExecutor', 'ext'), 'Released': ('bond',), 'Slashed': ('bond',)}
+# Events that depend on when someone called, not on what happened: `verify` is open to anyone, moves no token and only
+# frees the node's cover early; settle and voidNode free it anyway. A node whose parent is rejected while its own claim
+# is accepted shows Verified before Voided in one run and not in the next (two local runs, 2026-11-03).
+WHEN_DEPENDENT = {'Verified'}
 
 
 def _plans(st):
@@ -154,7 +158,7 @@ def transcript(chain, run):
             games[a['gameId']]['resolved'] = a['status']
         elif ev == 'ClaimResolved':
             claims[a['id']]['status'] = CLAIM_STATUS.get(a['status'], a['status'])
-        elif ev in IX.ESCROW_EVENTS and a.get('key') in labels:
+        elif ev in IX.ESCROW_EVENTS and a.get('key') in labels and ev not in WHEN_DEPENDENT:
             row = nodes.setdefault(labels[a['key']], {'events': [], 'claim': None})
             row['events'].append([ev] + [a[f] for f in AMOUNTS.get(ev, ())])
             if ev == 'Posted':

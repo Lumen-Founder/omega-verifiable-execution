@@ -34,7 +34,9 @@ Configuration (JSON). Only what is present runs; addresses are 0x hex:
     interval_s (12), monitor_every (1), fail_alert_after (3), max_backoff_s (300), stall_s (default 300, off on 31337 and 1337),
     renotify_s (3600), heartbeat (default <state_dir>/heartbeat.json), name (default 'omega')
     boards [OVM0Dispute addresses], inbox (default the boards')
-    orchestrator {agent, relayer, plans_dir}: key names; a plan is a file <plans_dir>/*.json of Plan.to_json
+    orchestrator {agent, relayer, plans_dir, publish_as?}: key names; a plan is a file <plans_dir>/*.json of Plan.to_json;
+        publish_as 'agent' publishes programs from the agent's key (it then needs ether), which watchers rebuild first
+        (re-audit B3); default 'relayer'
     executors [{key, board, accounts, referees, min_price, max_cover, max_lock_s?, min_eth_wei?, keep_stake?, payout?}]
     watchers [{key, board, gas_reserve_wei?}]: the ether a challenge must leave; default: the worst game on today's mainnet rules
     cannon {referee, inbox, toolchain, work, known_programs?, executor {key, withstand_wei, accounts, referees, min_price, max_cover, keep_stake?,
@@ -652,6 +654,8 @@ def build_stack(cfg, signers=None):
     from_block = cfg.get('from_block', 0)
     boards = {_hex(a): Board(chain, _hex(a), from_block) for a in cfg.get('boards', ())}
     o = cfg.get('orchestrator') or {}
+    if o.get('publish_as') not in (None, 'agent', 'relayer'):
+        raise SystemExit(f"CONFIG_BAD:orchestrator.publish_as:{o.get('publish_as')}")
     cannon, op = cfg.get('cannon') or {}, cfg.get('op') or {}
     mon = cfg.get('monitor')
     guards = DP.referee_guards(deploy_cfg, manifest) if deploy_cfg and manifest else None
@@ -664,7 +668,8 @@ def build_stack(cfg, signers=None):
     client = WorldClient(chain, escrow, signers.get(o.get('agent')), signers.get(o.get('relayer')),
                          token=_hex(cfg['token']) if cfg.get('token') else None, boards=boards, archive=cfg.get('archive'),
                          from_block=from_block, capital=capital, guards=guards, confirmations=cfg.get('confirmations'),
-                         inbox=inbox, prestates=toolchain, referees=referees)
+                         inbox=inbox, prestates=toolchain, referees=referees,
+                         publisher=signers.get(o.get('agent')) if o.get('publish_as') == 'agent' else None)
     players = []
     for x in cfg.get('executors', ()):
         b = boards[_hex(x['board'])]

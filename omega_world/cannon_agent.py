@@ -95,6 +95,24 @@ def poster_of(chain, escrow, key, from_block):
     return bytes.fromhex(tx['from'][2:]) if tx else None
 
 
+def agent_of(chain, escrow, account):
+    """the account's agent now (OmegaGraphEscrow.accounts, word 1), or None. Only the account's owner sets it"""
+    a = chain.call(escrow, call_data('accounts(bytes32)', account))[44:64]
+    return a if any(a) else None
+
+
+def preferred(chain, escrow, key, account, from_block):
+    """whose publications find_job rebuilds first: the account's agent, then who sent the node's post. A signed post can be
+    sent by anyone, so the sender alone can be an attacker with a flood of look-alikes (re-audit B3); nobody but the owner
+    can make an address the agent, so its publication cannot be buried (Orchestrator publisher=agent)."""
+    out = []
+    if account is not None:
+        out.append(agent_of(chain, escrow, account))
+    if key is not None:
+        out.append(poster_of(chain, escrow, key, from_block))
+    return tuple(p for p in out if p)
+
+
 def false_claim_judge(view, inbox, prestates, max_rebuilds=CN.MAX_REBUILDS, known_programs=()):
     """monitor.check's judge for a Cannon referee, by the watcher's own means: rebuild the job from the inbox and compare the
     game's root. True, False, 'contested' (false, and the true output stands against the root: anyone's other move may be
@@ -106,7 +124,7 @@ def false_claim_judge(view, inbox, prestates, max_rebuilds=CN.MAX_REBUILDS, know
     def judge(n, c):
         k = (n['prog'], n['inputs'], n['maxSteps'])
         if k not in found:
-            prefer = poster_of(view.chain, n['escrow'], n['key'], view.from_block) if 'key' in n else None
+            prefer = preferred(view.chain, n['escrow'], n.get('key'), n.get('account'), view.from_block) if 'escrow' in n else None
             try:
                 got = CN.find_job(view.chain, inbox, prestates, n['prog'], n['inputs'], n['maxSteps'], view.from_block, prefer,
                                   max_rebuilds, known=tuple(known_programs))
@@ -166,7 +184,8 @@ class _Party(GraphExecutor):
         """the job behind a prestate from the inbox, by this party's own rebuild, once found"""
         k = (prestate, inputs, max_steps)
         if k not in self._found:
-            prefer = poster_of(self.board.chain, self.escrow.address, key, self.board.from_block) if key else None
+            prefer = preferred(self.board.chain, self.escrow.address, key, self.escrow.node(key)['account'],
+                               self.board.from_block) if key else None
             got = CN.find_job(self.board.chain, self.inbox, self.prestates, prestate, inputs, max_steps,
                               self.board.from_block, prefer, self.max_rebuilds, known=self.known_programs)
             if got is None:

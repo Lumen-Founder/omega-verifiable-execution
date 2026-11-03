@@ -181,9 +181,10 @@ def find_job(chain, inbox, prestates, prestate, inputs_commit, max_steps, from_b
              known=()):
     """(program, inputs) of the publication whose rebuild gives this prestate, or None. A flood of publications with
     these inputs must not stand between a watcher and the job within one game clock: `known` (program commitments a
-    party knows, from its plan) are asked for by their topic, which no flood can bury, then `prefer` (who sent the node's
-    post) goes first, and after max_rebuilds distinct programs the job counts as not found. A publication the guest cannot
-    take is not the job. A build that fails is about this machine, not the job, and raises."""
+    party knows, from its plan) are asked for by their topic, which no flood can bury, then the publications of `prefer`
+    (an address, or addresses in order: cannon_agent.preferred) go first, and after max_rebuilds distinct programs the job
+    counts as not found. A publication the guest cannot take is not the job. A build that fails is about this machine, not
+    the job, and raises."""
     for prog in known:
         for r in published_logs(chain, inbox, from_block, inputs_commit, prog)[:1]:
             try:
@@ -191,7 +192,9 @@ def find_job(chain, inbox, prestates, prestate, inputs_commit, max_steps, from_b
                     return r.program, r.values
             except ValueError:
                 pass
-    rows = sorted(published_logs(chain, inbox, from_block, inputs_commit), key=lambda r: r.publisher != prefer)
+    order = [prefer] if isinstance(prefer, (bytes, bytearray)) else [p for p in (prefer or ()) if p]
+    rank = lambda r: order.index(r.publisher) if r.publisher in order else len(order)
+    rows = sorted(published_logs(chain, inbox, from_block, inputs_commit), key=rank)
     seen = set()
     for r in rows:
         if r.prog in seen:

@@ -79,15 +79,19 @@ def job_of(plan, t, attempt, vals, parents, prestates=None):
 
 class Orchestrator:
     def __init__(self, chain, escrow, plan, agent, relayer, boards=None, cosign=None, capital=None, guards=None, inbox=None,
-                 prestates=None, from_block=None):
+                 prestates=None, from_block=None, publisher=None):
         """boards: referee address -> Board for referees with an OVM0Inbox (programs are published there first);
         capital: referee address -> referee_policy.CannonCapital for Cannon referees;
         guards: referee address -> check(chain) -> bool, re-run before each post on it or on anything built on it
         (deploy.referee_guards);
         inbox: the OVM0Inbox of Cannon jobs and Optimism questions (default: the boards');
         prestates: (program, inputs, max_steps) -> prestate, cannon.Prestates, for Cannon tasks;
-        from_block: the deployment block, where log scans start (default: the boards')"""
+        from_block: the deployment block, where log scans start (default: the boards');
+        publisher: who publishes programs and questions (default the relayer). The agent closes re-audit B3: watchers
+        rebuild the agent's publications first (cannon_agent.preferred), and nobody else can publish as the agent, while
+        anyone can send a signed post before the relayer and pass for the poster. It needs ether for those transactions"""
         self.chain, self.esc, self.plan, self.agent, self.relayer = chain, escrow, plan, agent, relayer
+        self.publisher = publisher or relayer
         self.boards = dict(boards or {})
         self.inbox = inbox if inbox is not None else next((b.inbox for b in self.boards.values()), None)
         self.prestates = prestates
@@ -253,9 +257,9 @@ class Orchestrator:
         return True
 
     # ---- acting -------------------------------------------------------------------------------------------------------
-    def _send(self, tag, key, data, to=None):
+    def _send(self, tag, key, data, to=None, signer=None):
         try:
-            self.chain.send(self.relayer, to or self.esc.address, data)
+            self.chain.send(signer or self.relayer, to or self.esc.address, data)
         except TxOutcome as e:  # not mined yet (the same call next tick waits for it) or mined and failed: read again
             self.log.append((tag, key.hex()[:8], str(e)))
             return False
@@ -400,7 +404,7 @@ class Orchestrator:
         try:
             if self._published(inbox, board if t.kind == 'ovm0' else None, prog, inp, job.deadline):
                 return True
-            gas = int(self.chain.rpc('eth_estimateGas', {'from': '0x' + self.relayer.address.hex(), 'to': '0x' + inbox.hex(),
+            gas = int(self.chain.rpc('eth_estimateGas', {'from': '0x' + self.publisher.address.hex(), 'to': '0x' + inbox.hex(),
                                                          'data': '0x' + data.hex()}), 16)
         except RpcError as e:
             self.log.append(('publish', job.key.hex()[:8], 'refused:' + (revert_name(e) or str(e))))
@@ -409,17 +413,17 @@ class Orchestrator:
             self._too_large.add(t.name)
             self.log.append(('publish', job.key.hex()[:8], 'refused:PUBLISH_TOO_LARGE'))
             return False
-        return self._send('publish', job.key, data, to=inbox)
+        return self._send('publish', job.key, data, to=inbox, signer=self.publisher)
 
     def _published(self, inbox, board, prog, inp, deadline):
-        """the relayer's own publication is there, and it lasts. Own: someone else's may come first and costs nothing to make,
+        """the publisher's own publication is there, and it lasts. Own: someone else's may come first and costs nothing to make,
         and find_job looks at the poster's publication first, so that a flood of look-alikes cannot hide this job from a
         watcher (re-audit B3). Lasting: isPublished stays true for ever, a claim only passes within daMaxAge (B15)."""
         last = int.from_bytes(self.chain.call(inbox, call_data('lastPublished(bytes32,bytes32)', prog, inp))[:32], 'big')
         if last == 0 or (board is not None and self._runs_out(board, last, deadline)):
             return False
         return bool(scan_logs(self.chain, inbox, ['0x' + PUBLISHED_TOPIC.hex(), '0x' + prog.hex(), '0x' + inp.hex(),
-                                                  '0x' + bytes(12).hex() + self.relayer.address.hex()], self.from_block))
+                                                  '0x' + bytes(12).hex() + self.publisher.address.hex()], self.from_block))
 
     def _runs_out(self, board, last, deadline):
         """the publication would not last to the deadline, or for half its age if the deadline is further than one
@@ -442,7 +446,7 @@ class Orchestrator:
             self.log.append(('publish', key.hex()[:8], 'refused:' + (revert_name(e) or str(e))))
             return
         if rows:
-            self._send('publish', key, publish_data(rows[0].program, rows[0].values), to=board.inbox)
+            self._send('publish', key, publish_data(rows[0].program, rows[0].values), to=board.inbox, signer=self.publisher)
 
     def _try_post(self, t, attempt, now):
         while attempt < self.plan.max_attempts and self.plan.deadline(attempt) <= now + 60:

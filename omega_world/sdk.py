@@ -34,13 +34,14 @@ class AccountError(ValueError):
 
 class WorldClient:
     def __init__(self, chain, escrow_address, agent, relayer, token=None, boards=None, archive=None, cosign=None,
-                 from_block=None, capital=None, guards=None, confirmations=None, inbox=None, prestates=None, referees=()):
-        """capital, guards, inbox, prestates: as Orchestrator (Cannon dispute capital; deploy.referee_guards for
-        production; the inbox and the rebuild of Cannon jobs);
+                 from_block=None, capital=None, guards=None, confirmations=None, inbox=None, prestates=None, referees=(),
+                 publisher=None):
+        """capital, guards, inbox, prestates, publisher: as Orchestrator (Cannon dispute capital; deploy.referee_guards for
+        production; the inbox and the rebuild of Cannon jobs; who publishes, e.g. the agent);
         confirmations: the archive holds blocks this deep (default 0 on a test chain, DEFAULT_CONFIRMATIONS elsewhere);
         referees: more referees whose events the archive keeps, besides the boards'"""
         self.chain, self.agent, self.relayer, self.token = chain, agent, relayer, token
-        self.capital, self.guards = capital, guards
+        self.capital, self.guards, self.publisher = capital, guards, publisher
         self.esc = GraphEscrow(chain, escrow_address)
         self.boards = dict(boards or {})
         self.archive = archive
@@ -73,7 +74,7 @@ class WorldClient:
 
     def orchestrator(self, plan):
         return Orchestrator(self.chain, self.esc, plan, self.agent, self.relayer, self.boards, self.cosign,
-                            self.capital, self.guards, self.inbox, self.prestates, self.from_block)
+                            self.capital, self.guards, self.inbox, self.prestates, self.from_block, self.publisher)
 
     def allow_programs(self, owner, plan, outputs=None):
         """the owner's setProgram for what the plan's honest run posts (Plan.programs); `outputs` for what is not computed
