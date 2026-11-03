@@ -1,0 +1,89 @@
+{
+ "ok": true,
+ "chain_id": 11155111,
+ "escrow": "0x8bd576ea842f2371647158c35f079ee9125c20ef",
+ "commerce": "0xb7b42e50b59db56034942976447fd305f23d8835",
+ "evaluator": "0xaf68f7b5e6861371ccd47b820ef28b679ac912c8",
+ "code_matches_build": {
+  "commerce": true,
+  "evaluator": true
+ },
+ "jobs": {
+  "J1": {
+   "node": "A#1",
+   "node_state": "final",
+   "job_id": 1,
+   "status": "Completed",
+   "reason": "OMEGA_PAID",
+   "paid_to": "0xdafc74be031a149575b6c4ab17f129b493ae751e",
+   "provider_is_node_executor": true
+  },
+  "J2": {
+   "node": "A#0",
+   "node_state": "rejected",
+   "job_id": 2,
+   "status": "Rejected",
+   "reason": "OMEGA_NOT_PAID",
+   "paid_to": "0x4f794bd18bba78a1ad8c6be4078700b35aa40d80",
+   "provider_is_node_executor": false
+  },
+  "J3": {
+   "node": "B#1",
+   "node_state": "final",
+   "job_id": 3,
+   "status": "Rejected",
+   "reason": "OMEGA_PROVIDER_MISMATCH",
+   "paid_to": "0x4f794bd18bba78a1ad8c6be4078700b35aa40d80",
+   "provider_is_node_executor": false
+  }
+ },
+ "expected": {
+  "J1": [
+   "Completed",
+   "OMEGA_PAID"
+  ],
+  "J2": [
+   "Rejected",
+   "OMEGA_NOT_PAID"
+  ],
+  "J3": [
+   "Rejected",
+   "OMEGA_PROVIDER_MISMATCH"
+  ]
+ },
+ "gas": {
+  "deploy_commerce": 4788393,
+  "deploy_evaluator": 5946317,
+  "J1_create": 903919,
+  "J1_link": 181879,
+  "J1_fund": 238124,
+  "J2_create": 805999,
+  "J2_link": 181867,
+  "J2_fund": 238124,
+  "J3_create": 805987,
+  "J3_link": 181879,
+  "J3_fund": 238124,
+  "J1_submit": 30092,
+  "J1_decide": 325120,
+  "J2_decide": 306228,
+  "J3_decide": 325251
+ },
+ "tx": {
+  "deploy_commerce": "0xaa93fe35b1c83fea653a2a4f5be8878b09a53a465f40ae30c8f847f9be19948a",
+  "deploy_evaluator": "0xf97962ea1e63df1022cba4b96f81e4fc7970b7e45cb1ec1dca68f698df6cb6d1",
+  "J1_create": "0xac8efd5a8d8ce5ca1c8778b5b82af80d1578e1fdf81129039052aab965280382",
+  "J1_link": "0x7a7f7cd89e36899d4da1d469ded632f3ce65ce658d0ed82df8dccf19b146dc35",
+  "J1_fund": "0xcc5ae5bcdc0e4b70bce434252c8be834bdbfe633fee4f2fd9d17d97395c4b042",
+  "J2_create": "0x1ea96785de9526c77fd76250a99161af5499700bc27cad5cca8e2302ea7a93ab",
+  "J2_link": "0x474eb808318dd9839cbab467ad65357cc3e2811b6050f2d776e68dd14406294e",
+  "J2_fund": "0x050bbb702613b52313208c5eafde2ade2967cdac388b19b5ed2cf81b176c76da",
+  "J3_create": "0x79e826f5296c70b69ba0bba5ab42f2fcb737f96963f22c19baf4eb9aaf87f13a",
+  "J3_link": "0xcf4c55b8aaef6bf52c7cfeab244987fd0d4da65cb6e9b4cba85c53c64f93c4db",
+  "J3_fund": "0x1978e9a60c095c3966a63d534ad996937d8ff1c52b22bbbcc3a1eaf62c8aca30",
+  "J1_submit": "0xb44dd29a95dbffb09afd9cc6898c07329703828e61e06f25047fddd1b516cabc",
+  "J1_decide": "0x232b0a5c8973b76108774df391f97eda8630603b89fc8ad40b6ceeae09abad2f",
+  "J2_decide": "0xcd224a60bdbf7523246895b01352d74cd2d58a009d0750dc4285688cc1d82d92",
+  "J3_decide": "0xd6c73a8ad446ecabc91b4e85352c73b5118b620ca329c089e59abb3c00aa13e1"
+ },
+ "scope": "MockAgenticCommerce from the EIP text; no third-party ERC-8183 deployment; no budget moves"
+}
