@@ -1,0 +1,13 @@
+{
+  "name": "sepolia",
+  "chain_id": 11155111,
+  "token": "REQUIRED",
+  "grace": 86400,
+  "bond_bps": 12500,
+  "max_fee_cap_wei": 200000000000,
+  "urgent_fee_cap_wei": 200000000000,
+  "tx_gas_cap": null,
+  "dispute": {"window": 86400, "clock": 86400, "bond_wei": "REQUIRED", "reward_wei": "REQUIRED",
+              "step_cap": 10000, "da_max_age": 2592000},
+  "notes": "testnet rehearsal. bond/reward from omega_compute.dispute_econ at the measured gas price; token: an ERC-20 on this chain, used as it is (python -m omega_world.rehearsal deploy-token makes a TestToken for it)"
+}

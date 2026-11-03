@@ -1,0 +1,109 @@
+{
+  "name": "ethereum-mainnet",
+  "chain_id": 1,
+  "authorized": false,
+  "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "grace": 86400,
+  "bond_bps": 12500,
+  "max_fee_cap_wei": 200000000000,
+  "urgent_fee_cap_wei": 200000000000,
+  "dispute": {
+    "window": 604800,
+    "clock": 302400,
+    "bond_wei": 260000000000000000,
+    "reward_wei": 130000000000000000,
+    "step_cap": 10000,
+    "da_max_age": 2592000
+  },
+  "op_referee": {
+    "factory": "0xe5965Ab5962eDc7477C8520243A95517CD252fA9",
+    "registry": "0x23B2C62946350F4246f9f9D027e071f0264FD113",
+    "game_type": 9,
+    "l2_chain_id": 10,
+    "window": 2160000,
+    "register_grace": 120,
+    "codehashes": {
+      "factory": {
+        "address": "0xe5965ab5962edc7477c8520243a95517cd252fa9",
+        "codehash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998"
+      },
+      "registry": {
+        "address": "0x23b2c62946350f4246f9f9d027e071f0264fd113",
+        "codehash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998"
+      },
+      "factory_impl": {
+        "address": "0x72b971717e088b59f26d4236be222adb6acd393b",
+        "codehash": "0x5af8d2112a3e0338ed753cc34a4c5d71d04512848f04d76bd6f15a8b378c89a4"
+      },
+      "registry_impl": {
+        "address": "0x8f40cc98d694ab986f026c5383a181fcc9b6b281",
+        "codehash": "0x3f54fcc2d17726f6c927da08dec4dbfbecc43a013fd309344ecd2cace85ae36d"
+      },
+      "game_impl": {
+        "address": "0x19af533cc2a2a55786dcb8672aa5717e64213208",
+        "codehash": "0xa001bf4f37eca0afb87782c343553ea10ae7e8222b8da5b36bc5e1840698539c"
+      },
+      "game_vm": {
+        "address": "0xacc005dcd857b401e4732e6f7837135a22825cfa",
+        "codehash": "0x167a39a066022fb73def3edbd9f56ff8101381d847ded3d4f878d8eeb1788092"
+      },
+      "game_oracle": {
+        "address": "0x1e1d73536a081ef2f355d29794547a9770aeb1e0",
+        "codehash": "0x5d9b4d9e60bc5bc05f07ed3d2187161637158dd764b98e03843bda92cd1ee6f7"
+      }
+    }
+  },
+  "cannon_referee": {
+    "impl": "0x6dDBa09bc4cCB0D6Ca9Fc5350580f74165707499",
+    "vm": "0xaCc005DCd857B401e4732E6F7837135A22825cfA",
+    "game_type": 4242,
+    "init_bond_wei": 80000000000000000,
+    "finality": 302400,
+    "bond_delay": 302400,
+    "step_cap": 10000,
+    "window": 2160000,
+    "register_grace": 120,
+    "codehashes": {
+      "impl": {
+        "address": "0x6ddba09bc4ccb0d6ca9fc5350580f74165707499",
+        "codehash": "0x7138c1e90bf00ed1f96159632d8fbd4d313a2e47a1fd0f2f3fd3a3eeb857f650"
+      },
+      "vm": {
+        "address": "0xacc005dcd857b401e4732e6f7837135a22825cfa",
+        "codehash": "0x167a39a066022fb73def3edbd9f56ff8101381d847ded3d4f878d8eeb1788092"
+      },
+      "oracle": {
+        "address": "0x1e1d73536a081ef2f355d29794547a9770aeb1e0",
+        "codehash": "0x5d9b4d9e60bc5bc05f07ed3d2187161637158dd764b98e03843bda92cd1ee6f7"
+      }
+    }
+  },
+  "token_pins": {
+    "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "impl_slot": "0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3",
+    "codehashes": {
+      "proxy": {
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "codehash": "0xd80d4b7c890cb9d6a4893e6b52bc34b56b25335cb13716e0d1d31383e6b41505"
+      },
+      "impl": {
+        "address": "0x43506849d7c04f9138d1a2050bbf3a0c054402dd",
+        "codehash": "0xcdfb7d322961af3acae7a8f7ee8b69c205b36f576cc5b077f170c7eb8ecbe3ea"
+      }
+    }
+  },
+  "parameter_basis": {
+    "token": "USDC (Circle), the token of the mainnet-fork runs (RESULT_FORK, RESULT_OP_REFEREE). Issuer can freeze an address or pause (THREAT_MODEL T28); DAI is the non-freezable alternative, not fork-tested",
+    "reward_wei": "dispute_econ.reward_floor_wei(step_cap 10000, 50 gwei, margin 1.5) = 0.124215 ETH on the deployed referee OVM0Step, rounded up to 0.13 ETH: an honest challenger's worst game is 1,656,200 gas (14 rounds, a full-state prove of 660,195 gas, RESULT_DISPUTE_WORST.json), repaid up to a 52.3 gwei spike with the margin and 78.5 gwei without it (measured p90 2026-10-30: 0.52 gwei). These are mainnet's gas rules today. Glamsterdam, live on Sepolia since 2026-10-06 and not dated on mainnet, prices the same game at about 3,625,000 gas (dispute_econ.GLAMSTERDAM: the Sepolia rehearsal's moves and the calldata floor of a full-state prove; not a full game on those rules): 0.13 ETH would then cover 23 gwei with the margin and 35 without it. Measure and decide again before authorizing if the fork is near. The earlier 0.11 ETH used the gas of OVM0StepM, which the stack does not deploy, and its margin was 1.28 (audit A29)",
+    "bond_wei": "2 x reward: a defeated false claim burns 0.13 ETH; bond > reward as the contract requires",
+    "window_clock": "7 days / 3.5 days per side: finality <= window + 2 clock = 14 days (dispute_econ.max_finality_delay); watcher log horizon 44 days",
+    "fee_caps": "wei per gas a transaction may sign for, so also the most it can pay: 200 gwei, the bound the code has always had. urgent_fee_cap_wei is the same cap for the moves with a deadline (watchers, executors): raising it above 200 gwei is the user's decision and is bound to the arming by the file's sha256",
+    "grace_bond_bps": "1 day expiry grace; stake = 1.25 x price",
+    "capital_cost": "an OVM0 claim locks 0.26 ETH for up to 14 days, 0.26 ETH for 7 days without a dispute; job prices must cover it (ADR-0012 section 6)",
+    "cannon_referee": "impl = FaultDisputeGame 2.2.0 (Base's permissionless Cannon type 8 on L1, depth 73, split 30, clock 3.5 days), vm = MIPS64 1.10.1 of OP Mainnet's games (state version 8); both immutable, read 2026-10-30, re-read before deployment. init bond 0.08 ETH and finality 3.5 days as Optimism's. A full 73-level dispute holds about 691 ETH of game bonds (RESULT_CANNON_GAME), all paid to the winner: per branch the defender posts 329.88 ETH and the challenger 361.28 ETH, not half (referee_policy.requirement adds gas, the root bond and the attacker's W). window 25 days (2,160,000 s) >= deploy.game_window_need = 2 x 3.5 days clocks + 73 x 3 h + 3 h clock extensions + 1 day PreimageOracle challenge period + 3.5 days finality + 3.5 days for resolve and reject calls = 2,095,200 s (independent review D27: the earlier 14 days ignored the extensions). Bonds sit in OmegaBondVault (no owner), not in a DelayedWETH an owner can seize",
+    "op_referee": "Optimism mainnet contracts read 2026-10-30 (ADR-0013); re-read before deployment. window 25 days = the same bound as cannon_referee (game type 9 also has depth 73, 3 h extensions, a 1 day oracle challenge period): game clocks up to 7 days + extensions about 10.25 days + finality delay 3.5 days + 3.5 days for resolve and reject calls (D22: 11 days left a false node able to expire unrejected; D27: 14 days ignored the clock extensions)",
+    "token_pins": "USDC is a proxy (admin 0x807a96288a1a408dbc13de2b1d087d10356395d2 at the fork block): Circle can upgrade it, freeze an address and pause. Read at Ethereum block 26328829 (2026-11-03) in tests/test_omega_fork (RESULT_FORK.json network). A change shows as PINS_CHANGED through deploy.pins_diff; it does not stop the stack by itself, what to do about it is in RUNBOOK_INCIDENT. Re-read before deployment.",
+    "codehashes": "keccak256 of the deployed code, read at Ethereum block 26303334 (2026-10-30) over a public RPC (EXTERNAL_CODEHASHES.json); deploy.verify and every post (referee_guards) refuse other code. The factory and registry are proxies whose implementation Optimism's ProxyAdmin can change, and the factory owner can replace the type-9 game: such a change stops new posts on the referee; tasks already posted stay judged by whatever Optimism runs (SECURITY_REVIEW R13). Re-read before deployment."
+  },
+  "notes": "NOT AUTHORIZED. Every value is filled and validated; deployment needs the user to set authorized=true as part of the RUNBOOK_DEPLOY approval, after the external audit (X1). The values are Claude's proposal with the basis above, not the user's decision."
+}

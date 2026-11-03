@@ -1,0 +1,80 @@
+{
+ "name": "sepolia-full",
+ "chain_id": 11155111,
+ "token": "0x9aaf2540953e3bd045d35874c699259f8d06fb8b",
+ "grace": 3600,
+ "bond_bps": 12500,
+ "dispute": {
+  "window": 1800,
+  "clock": 600,
+  "bond_wei": 3000000000000000,
+  "reward_wei": 2500000000000000,
+  "step_cap": 10000,
+  "da_max_age": 2592000
+ },
+ "notes": "Sepolia with all 8 contracts (ADR-0012 X2, 2026-11-03). token: a TestToken anyone can mint, used by our run; deploy your own with omega_world.rehearsal deploy-token if you prefer. Re-read the Optimism code hashes before use (omega_world.deploy pins). The OP and Cannon referees are exercised by tools/world/sepolia_long_jobs.py, not by the rehearsal",
+ "op_referee": {
+  "factory": "0x05F9613aDB30026FFd634f38e5C4dFd30a197Fa1",
+  "registry": "0xa1cec548926eb5d69aa3b7b57d371edbdd03e64b",
+  "game_type": 9,
+  "l2_chain_id": 11155420,
+  "window": 2160000,
+  "register_grace": 120,
+  "codehashes": {
+   "factory": {
+    "address": "0x05f9613adb30026ffd634f38e5c4dfd30a197fa1",
+    "codehash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998"
+   },
+   "registry": {
+    "address": "0xa1cec548926eb5d69aa3b7b57d371edbdd03e64b",
+    "codehash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998"
+   },
+   "factory_impl": {
+    "address": "0x72b971717e088b59f26d4236be222adb6acd393b",
+    "codehash": "0x5af8d2112a3e0338ed753cc34a4c5d71d04512848f04d76bd6f15a8b378c89a4"
+   },
+   "registry_impl": {
+    "address": "0x8f40cc98d694ab986f026c5383a181fcc9b6b281",
+    "codehash": "0x3f54fcc2d17726f6c927da08dec4dbfbecc43a013fd309344ecd2cace85ae36d"
+   },
+   "game_impl": {
+    "address": "0x19af533cc2a2a55786dcb8672aa5717e64213208",
+    "codehash": "0xa001bf4f37eca0afb87782c343553ea10ae7e8222b8da5b36bc5e1840698539c"
+   },
+   "game_vm": {
+    "address": "0xacc005dcd857b401e4732e6f7837135a22825cfa",
+    "codehash": "0x167a39a066022fb73def3edbd9f56ff8101381d847ded3d4f878d8eeb1788092"
+   },
+   "game_oracle": {
+    "address": "0x1e1d73536a081ef2f355d29794547a9770aeb1e0",
+    "codehash": "0x5d9b4d9e60bc5bc05f07ed3d2187161637158dd764b98e03843bda92cd1ee6f7"
+   }
+  }
+ },
+ "cannon_referee": {
+  "impl": "0x6dDBa09bc4cCB0D6Ca9Fc5350580f74165707499",
+  "vm": "0xaCc005DCd857B401e4732E6F7837135A22825cfA",
+  "game_type": 4242,
+  "init_bond_wei": 80000000000000000,
+  "finality": 302400,
+  "bond_delay": 302400,
+  "step_cap": 10000,
+  "window": 2160000,
+  "register_grace": 120,
+  "codehashes": {
+   "impl": {
+    "address": "0x6ddba09bc4ccb0d6ca9fc5350580f74165707499",
+    "codehash": "0x7138c1e90bf00ed1f96159632d8fbd4d313a2e47a1fd0f2f3fd3a3eeb857f650"
+   },
+   "vm": {
+    "address": "0xacc005dcd857b401e4732e6f7837135a22825cfa",
+    "codehash": "0x167a39a066022fb73def3edbd9f56ff8101381d847ded3d4f878d8eeb1788092"
+   },
+   "oracle": {
+    "address": "0x1e1d73536a081ef2f355d29794547a9770aeb1e0",
+    "codehash": "0x5d9b4d9e60bc5bc05f07ed3d2187161637158dd764b98e03843bda92cd1ee6f7"
+   }
+  }
+ },
+ "tx_gas_cap": null
+}

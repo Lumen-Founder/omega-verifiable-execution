@@ -1,0 +1,12 @@
+{
+  "name": "anvil-local",
+  "chain_id": 31337,
+  "token": "0x0000000000000000000000000000000000000001",
+  "grace": 3600,
+  "bond_bps": 12500,
+  "max_fee_cap_wei": 200000000000,
+  "urgent_fee_cap_wei": 200000000000,
+  "dispute": {"window": 3600, "clock": 3600, "bond_wei": 10000000000000000, "reward_wei": 5000000000000000,
+              "step_cap": 10000, "da_max_age": 2592000},
+  "notes": "token is replaced by the test's TestToken address at run time"
+}
