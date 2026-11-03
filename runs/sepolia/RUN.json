@@ -1,0 +1,226 @@
+{
+ "chain_id": 11155111,
+ "config": {
+  "name": "sepolia-full",
+  "chain_id": 11155111,
+  "token": "0x9aaf2540953e3bd045d35874c699259f8d06fb8b",
+  "grace": 3600,
+  "bond_bps": 12500,
+  "dispute": {
+   "window": 1800,
+   "clock": 600,
+   "bond_wei": 3000000000000000,
+   "reward_wei": 2500000000000000,
+   "step_cap": 10000,
+   "da_max_age": 2592000
+  },
+  "notes": "X2 2026-11-03: all 8 contracts on Sepolia, OP Sepolia factory and the same Cannon bytecode as mainnet; only deploy+verify for the OP and Cannon referees",
+  "op_referee": {
+   "factory": "0x05F9613aDB30026FFd634f38e5C4dFd30a197Fa1",
+   "registry": "0xa1cec548926eb5d69aa3b7b57d371edbdd03e64b",
+   "game_type": 9,
+   "l2_chain_id": 11155420,
+   "window": 2160000,
+   "register_grace": 120,
+   "codehashes": {
+    "factory": {
+     "address": "0x05f9613adb30026ffd634f38e5c4dfd30a197fa1",
+     "codehash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998"
+    },
+    "registry": {
+     "address": "0xa1cec548926eb5d69aa3b7b57d371edbdd03e64b",
+     "codehash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998"
+    },
+    "factory_impl": {
+     "address": "0x72b971717e088b59f26d4236be222adb6acd393b",
+     "codehash": "0x5af8d2112a3e0338ed753cc34a4c5d71d04512848f04d76bd6f15a8b378c89a4"
+    },
+    "registry_impl": {
+     "address": "0x8f40cc98d694ab986f026c5383a181fcc9b6b281",
+     "codehash": "0x3f54fcc2d17726f6c927da08dec4dbfbecc43a013fd309344ecd2cace85ae36d"
+    },
+    "game_impl": {
+     "address": "0x19af533cc2a2a55786dcb8672aa5717e64213208",
+     "codehash": "0xa001bf4f37eca0afb87782c343553ea10ae7e8222b8da5b36bc5e1840698539c"
+    },
+    "game_vm": {
+     "address": "0xacc005dcd857b401e4732e6f7837135a22825cfa",
+     "codehash": "0x167a39a066022fb73def3edbd9f56ff8101381d847ded3d4f878d8eeb1788092"
+    },
+    "game_oracle": {
+     "address": "0x1e1d73536a081ef2f355d29794547a9770aeb1e0",
+     "codehash": "0x5d9b4d9e60bc5bc05f07ed3d2187161637158dd764b98e03843bda92cd1ee6f7"
+    }
+   }
+  },
+  "cannon_referee": {
+   "impl": "0x6dDBa09bc4cCB0D6Ca9Fc5350580f74165707499",
+   "vm": "0xaCc005DCd857B401e4732E6F7837135A22825cfA",
+   "game_type": 4242,
+   "init_bond_wei": 80000000000000000,
+   "finality": 302400,
+   "bond_delay": 302400,
+   "step_cap": 10000,
+   "window": 2160000,
+   "register_grace": 120,
+   "codehashes": {
+    "impl": {
+     "address": "0x6ddba09bc4ccb0d6ca9fc5350580f74165707499",
+     "codehash": "0x7138c1e90bf00ed1f96159632d8fbd4d313a2e47a1fd0f2f3fd3a3eeb857f650"
+    },
+    "vm": {
+     "address": "0xacc005dcd857b401e4732e6f7837135a22825cfa",
+     "codehash": "0x167a39a066022fb73def3edbd9f56ff8101381d847ded3d4f878d8eeb1788092"
+    },
+    "oracle": {
+     "address": "0x1e1d73536a081ef2f355d29794547a9770aeb1e0",
+     "codehash": "0x5d9b4d9e60bc5bc05f07ed3d2187161637158dd764b98e03843bda92cd1ee6f7"
+    }
+   }
+  },
+  "tx_gas_cap": null
+ },
+ "manifest": {
+  "authorized": false,
+  "chain_id": 11155111,
+  "deployer": "0x4f794bd18bba78a1ad8c6be4078700b35aa40d80",
+  "from_block": 12051488,
+  "name": "sepolia-full",
+  "steps": [
+   {
+    "address": "0xb08270056e021cc16b0a364ba1ce3f73a949592f",
+    "block": 12051488,
+    "constructor_args": [],
+    "contract": "OVM0Step",
+    "init_code_keccak": "0xea314964147473cb8196550baa65d0b314669847af533492e5566429af9939ca",
+    "init_code_len": 5954,
+    "nonce": 14,
+    "runtime_masked_keccak": "0xe303f13b95c1e1f7f7e76cfb93477913cee8ee111bba00ac8bb7005fa9921ab7",
+    "tx_hash": "0xa960ab581f6ab1bd1f4c2b8e6035628baf26485250ad4d491e0b8a1a534a7726"
+   },
+   {
+    "address": "0xc970b5b0f150dc1ae21c36b108b48b74f917a6d0",
+    "block": 12051489,
+    "constructor_args": [],
+    "contract": "OVM0Inbox",
+    "init_code_keccak": "0xde131a20991ba9b2f5bcdcd0e2b585d4ba78fb7a17dfab9b258d890124be4db8",
+    "init_code_len": 2492,
+    "nonce": 15,
+    "runtime_masked_keccak": "0x312df27e941f9d53b7db6cdabce4438bde1e2c28b74d1a4d8159be734b9506dd",
+    "tx_hash": "0x7c9b4863fb15c3b29613aced78fa36eb256087880b9847aa44733c1d62a59321"
+   },
+   {
+    "address": "0x73f249b2808be43723f36d3c7d71e6326a94fbec",
+    "block": 12051490,
+    "constructor_args": [
+     "0xb08270056e021cc16b0a364ba1ce3f73a949592f",
+     "0xc970b5b0f150dc1ae21c36b108b48b74f917a6d0",
+     1800,
+     3000000000000000,
+     2500000000000000,
+     10000,
+     600,
+     2592000
+    ],
+    "contract": "OVM0Dispute",
+    "init_code_keccak": "0x6fb156a0bf531408ba8b675e811fa960563d3c7e360af772b5c35bf6209878b7",
+    "init_code_len": 10148,
+    "nonce": 16,
+    "runtime_masked_keccak": "0xdb2c932b0d9f71b68c58762dc6f6873dae31611ea00349b65d048db090a0c866",
+    "tx_hash": "0xe9814159ba9de58ba64a4150a428cb4cd3ea1d77e627bd0aa1026bd5cc27507b"
+   },
+   {
+    "address": "0x8bd576ea842f2371647158c35f079ee9125c20ef",
+    "block": 12051491,
+    "constructor_args": [
+     "0x9aaf2540953e3bd045d35874c699259f8d06fb8b",
+     3600,
+     12500
+    ],
+    "contract": "OmegaGraphEscrow",
+    "init_code_keccak": "0x241d327249415c8da50e2d50676403fd9f91a03cfd325bbb90c2caac5582b939",
+    "init_code_len": 22510,
+    "nonce": 17,
+    "runtime_masked_keccak": "0x615c4564d740b7dbb5664a2e38d66d8c57aa070a6a51fa26abfc1801b0691b70",
+    "tx_hash": "0xc74a512c2435c13ae59e8d208b2be8b1fd58c444d0b1ba336c522cfc324574d1"
+   },
+   {
+    "address": "0xc72ebca9350a76b4a8300e741b705a28ed0dc678",
+    "block": 12051492,
+    "constructor_args": [
+     "0x05f9613adb30026ffd634f38e5c4dfd30a197fa1",
+     "0xa1cec548926eb5d69aa3b7b57d371edbdd03e64b",
+     9,
+     11155420,
+     2160000,
+     120
+    ],
+    "contract": "OmegaSuperRootReferee",
+    "init_code_keccak": "0x1806dcae22ed1416da70410dd13b6a530ed6e9b8acff45071541563b01fccbcf",
+    "init_code_len": 5319,
+    "nonce": 18,
+    "runtime_masked_keccak": "0x8ae4e85618c31d178f592690bdf2db72816c163226291ea3fc4b997febdff5af",
+    "tx_hash": "0xb86397f0b7c066f8f498101bd0654a9388dbc988a214fb3b09cd6a5b81a5cbd4"
+   },
+   {
+    "address": "0xd5f0aaa994ed28841cf3da27fea1d66f85d5dd79",
+    "block": 12051493,
+    "constructor_args": [
+     302400
+    ],
+    "contract": "OmegaBondVault",
+    "init_code_keccak": "0xde120903f10a2130d2ec38db81245f18737ec82fc2f3e4227f97a1e5069e78c8",
+    "init_code_len": 1235,
+    "nonce": 19,
+    "runtime_masked_keccak": "0xebea4ef33fe5d9ea866fd4fe031f5b3a497168be4135c655d8c9d380af7d5afd",
+    "tx_hash": "0xc93df58e7c98201a4c6f4da21757854d2c9666185b161c27c6ca39861cf4a6c6"
+   },
+   {
+    "address": "0xce7f98f848d6b315ff66d23a41c50ac0941c4f35",
+    "block": 12051494,
+    "constructor_args": [
+     "0x6ddba09bc4ccb0d6ca9fc5350580f74165707499",
+     "0xacc005dcd857b401e4732e6f7837135a22825cfa",
+     "0xd5f0aaa994ed28841cf3da27fea1d66f85d5dd79",
+     4242,
+     80000000000000000,
+     302400
+    ],
+    "contract": "OmegaCannonGames",
+    "init_code_keccak": "0x0473d78158c167661290e6034d164f4e738a1338809f86aa446fc156053141aa",
+    "init_code_len": 4366,
+    "nonce": 20,
+    "runtime_masked_keccak": "0xc8616bd72eac21cd7fbd1920afff8dfbcfa4dd34cfed2d6c1c43fb46276bed9e",
+    "tx_hash": "0x90637e21604832956849c131d6c75dda7eb2c4f5e9e8056ae0de581b389c0a37"
+   },
+   {
+    "address": "0x0b11e7849c9425275410cdbb8e35e2482ef54c7e",
+    "block": 12051495,
+    "constructor_args": [
+     "0xce7f98f848d6b315ff66d23a41c50ac0941c4f35",
+     10000,
+     2160000,
+     120
+    ],
+    "contract": "OmegaCannonReferee",
+    "init_code_keccak": "0x03206521509674144469dbf0f71c0f0cba692d22a0a35b38b459a130b828fb28",
+    "init_code_len": 5377,
+    "nonce": 21,
+    "runtime_masked_keccak": "0x7f9ca0ff94d26a96d5d8ef8e92716bfc3413f571d899737db5a9d4336a1012dd",
+    "tx_hash": "0x3a1148c2fb38e57d99ff7bb7aaaaec6fadad201cd6e547ccd56aa42b91aa9732"
+   }
+  ]
+ },
+ "account": "82b0d6124cf8871f8423a642634ca6892a30041a3c4ad9e4e6e724e4920f1a10",
+ "plans": [
+  "{\"account\":\"0x82b0d6124cf8871f8423a642634ca6892a30041a3c4ad9e4e6e724e4920f1a10\",\"anchor\":1793663208,\"max_attempts\":3,\"tasks\":[{\"comp\":50,\"cond\":0,\"cond_arg\":0,\"executors\":[\"0x48e30f7939bbabeec9b9debd61361f2ec868d0b1\",\"0xdafc74be031a149575b6c4ab17f129b493ae751e\"],\"ext\":0,\"inputs\":[10],\"max_steps\":10000,\"name\":\"A\",\"parents\":[],\"price\":1000,\"program\":[[\"PUSH\",0],[\"LOAD\",0],[\"DUP\",0],[\"JZ\",11],[\"DUP\",0],[\"SWAP\",2],[\"ADD\"],[\"SWAP\",1],[\"PUSH\",1],[\"SUB\"],[\"JMP\",2],[\"POP\"],[\"HALT\"]],\"referee\":\"0x73f249b2808be43723f36d3c7d71e6326a94fbec\"},{\"comp\":50,\"cond\":0,\"cond_arg\":0,\"executors\":[\"0xdafc74be031a149575b6c4ab17f129b493ae751e\"],\"ext\":0,\"inputs\":[],\"max_steps\":10000,\"name\":\"B\",\"parents\":[\"A\"],\"price\":1000,\"program\":[[\"LOAD\",0],[\"PUSH\",1],[\"ADD\"],[\"HALT\"]],\"referee\":\"0x73f249b2808be43723f36d3c7d71e6326a94fbec\"},{\"comp\":50,\"cond\":0,\"cond_arg\":0,\"executors\":[\"0xdafc74be031a149575b6c4ab17f129b493ae751e\"],\"ext\":0,\"inputs\":[],\"max_steps\":10000,\"name\":\"C\",\"parents\":[\"B\"],\"price\":1000,\"program\":[[\"LOAD\",0],[\"PUSH\",2],[\"MUL\"],[\"HALT\"]],\"referee\":\"0x73f249b2808be43723f36d3c7d71e6326a94fbec\"}],\"ttl\":7200}",
+  "{\"account\":\"0x82b0d6124cf8871f8423a642634ca6892a30041a3c4ad9e4e6e724e4920f1a10\",\"anchor\":1793670744,\"max_attempts\":1,\"tasks\":[{\"comp\":0,\"cond\":0,\"cond_arg\":0,\"executors\":[\"0xdafc74be031a149575b6c4ab17f129b493ae751e\"],\"ext\":0,\"inputs\":[41],\"max_steps\":10000,\"name\":\"R\",\"parents\":[],\"price\":1000,\"program\":[[\"LOAD\",0],[\"PUSH\",1],[\"ADD\"],[\"HALT\"]],\"referee\":\"0x73f249b2808be43723f36d3c7d71e6326a94fbec\"}],\"ttl\":300}"
+ ],
+ "to_block": 12053260,
+ "roles": {
+  "owner": "0x531d4adb6c6de2dca2741247376ab7d6b00d0d95",
+  "executor": "0xdafc74be031a149575b6c4ab17f129b493ae751e",
+  "liar": "0x48e30f7939bbabeec9b9debd61361f2ec868d0b1",
+  "watcher": "0x99deb639d008caacfa35fdbd69b906fba66c1cd1"
+ }
+}

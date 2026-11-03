@@ -266,7 +266,7 @@ def _run(chain, s, cfg, token, st, folder, wait, stake, deposit, confirmations, 
             'inclusion_s': {'n': len(included), 'mean': round(sum(included) / len(included), 3), 'p50': _pct(included, 0.5),
                             'p90': _pct(included, 0.9), 'max': round(max(included), 3)},
             'scope': {'deployed': deployed, 'not_deployed': [c for c in MAINNET_CONTRACTS if c not in deployed],
-                      'paths_exercised': ['OVM0Dispute'], 'state_dir': str(folder)},
+                      'paths_exercised': ['OVM0Dispute'], 'state_dir': folder.name},  # the name only: a published report keeps no local path
             'health': health, 'alerts': [a.code for a in alerts], 'archive_records': len(recs),
             'archive_head': head, 'archive_mismatch': on_chain,
             'gas_by_selector': {k: {'n': len(v), 'mean': sum(v) // len(v)} for k, v in by.items()}}

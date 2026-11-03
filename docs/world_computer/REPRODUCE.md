@@ -100,3 +100,7 @@ document that was wrong or missing.
 ## Status of the numbers in this document
 
 Filled from measured runs only; see `runs/sepolia/` and `docs/adr/ADR-0015-verifiable-execution-identity.md`.
+
+On 2026-11-03 we ran A and B ourselves on Windows (Python 3.14, forge 1.5.1) against `runs/sepolia/`: A gave `"same": true`, and B,
+reading from `https://sepolia.gateway.tenderly.co`, gave `code_matches_build: true` and `"same": true`. That is our own check, not
+an independent one: yours is the one that counts.

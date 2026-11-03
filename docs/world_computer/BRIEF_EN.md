@@ -14,7 +14,7 @@ computation only: our bisection game (`OVM0Dispute`), Optimism output roots (Opt
 
 | | |
 | --- | --- |
-| Sepolia, 2026-11-03 | All 8 contracts deployed and bytecode-verified. A false claim was challenged 36 s (chain time) after it appeared, lost a 14-move game and was rejected 504 s after it was made. Two dependent jobs were voided, the honest executor was compensated, the retried plan settled (55, 56, 112) and paid out. A restart in the middle of the game recovered without re-posting anything. 89 transactions, mean inclusion 12.6 s, p90 23.1 s |
+| Sepolia, 2026-11-03 | All 8 contracts deployed and bytecode-verified. A false claim was challenged 36 s (chain time) after it appeared, lost a 14-move game and was rejected 504 s after it was made. Two dependent jobs were voided, the honest executor was compensated, the retried plan settled (55, 56, 112) and paid out. A restart in the middle of the game recovered without re-posting anything. 89 transactions, mean inclusion 12.6 s, p90 23.1 s. At the close the escrow held no token and nothing locked or bonded. A local run of the same sources and a keyless re-read from a public RPC both give the same transcript (`runs/sepolia/`) |
 | Gas per job, no dispute | 2,856,423 on Sepolia's rules (Glamsterdam), from posting to the bond's return |
 | Reproducibility | A zip of committed files runs the whole job locally in about two minutes; Windows and Linux builds give the same bytecode digest and the same accounting digest. Not yet repeated by anyone outside the project |
 | Tests | Unit, integration, invariant fuzzing, exhaustive small graphs, fork tests against mainnet Optimism contracts; mutation testing of all 8 contracts: 577 mutants, 0 survivors (17 equivalent) |

@@ -1,0 +1,355 @@
+{
+ "ok": true,
+ "environment": {
+  "os": "Windows",
+  "machine": "AMD64",
+  "python": "3.14.0",
+  "forge": "forge Version: 1.5.1-stable"
+ },
+ "rehearsal": {
+  "ok": true,
+  "outputs": {
+   "A": 55,
+   "B": 56,
+   "C": 112
+  },
+  "dispute": {
+   "games": 1,
+   "moves": 14,
+   "watcher_reaction_chain_s": 36,
+   "claim_to_rejected_chain_s": 504,
+   "claim_status": 3
+  },
+  "restart": {
+   "attempts_used": {
+    "A": 1,
+    "B": 1,
+    "C": 0
+   },
+   "moves_before": 5,
+   "moves_first_pass": 6,
+   "recovered_s": 105.988,
+   "state": {
+    "A": "claimed",
+    "B": "unposted",
+    "C": "unposted"
+   }
+  },
+  "scope": {
+   "deployed": [
+    "OVM0Step",
+    "OVM0Inbox",
+    "OVM0Dispute",
+    "OmegaGraphEscrow",
+    "OmegaSuperRootReferee",
+    "OmegaBondVault",
+    "OmegaCannonGames",
+    "OmegaCannonReferee"
+   ],
+   "not_deployed": [],
+   "paths_exercised": [
+    "OVM0Dispute"
+   ],
+   "state_dir": "state"
+  },
+  "health": "ok",
+  "inclusion_s": {
+   "n": 89,
+   "mean": 12.639,
+   "p50": 12.17,
+   "p90": 23.13,
+   "max": 42.096
+  },
+  "executor_earned": 3100,
+  "executor_withdrawn": 96850
+ },
+ "close": {
+  "ok": true,
+  "refund": {
+   "before": 998250,
+   "after_expiry": 998250
+  },
+  "escrow_tokens_left": 0,
+  "totals": {
+   "locked": 0,
+   "bondsHeld": 0,
+   "coversHeld": 0
+  },
+  "dispute_contract_wei_left": 500000000000000,
+  "dispute_burned_wei": 500000000000000,
+  "closed_at_block": 12053260
+ },
+ "transcript": {
+  "chain_id": 11155111,
+  "contracts": {
+   "OVM0Step": "0xb08270056e021cc16b0a364ba1ce3f73a949592f",
+   "OVM0Inbox": "0xc970b5b0f150dc1ae21c36b108b48b74f917a6d0",
+   "OVM0Dispute": "0x73f249b2808be43723f36d3c7d71e6326a94fbec",
+   "OmegaGraphEscrow": "0x8bd576ea842f2371647158c35f079ee9125c20ef",
+   "OmegaSuperRootReferee": "0xc72ebca9350a76b4a8300e741b705a28ed0dc678",
+   "OmegaBondVault": "0xd5f0aaa994ed28841cf3da27fea1d66f85d5dd79",
+   "OmegaCannonGames": "0xce7f98f848d6b315ff66d23a41c50ac0941c4f35",
+   "OmegaCannonReferee": "0x0b11e7849c9425275410cdbb8e35e2482ef54c7e"
+  },
+  "economics": {
+   "nodes": {
+    "A#0": {
+     "events": [
+      [
+       "Posted"
+      ],
+      [
+       "Reserved",
+       1250,
+       100
+      ],
+      [
+       "Bound"
+      ],
+      [
+       "Rejected",
+       1250,
+       0
+      ]
+     ],
+     "claim": {
+      "defender": "liar",
+      "n": 96,
+      "games": [
+       {
+        "challenger": "watcher",
+        "moves": 14,
+        "resolved": 3
+       }
+      ],
+      "status": "rejected"
+     },
+     "executor": "liar"
+    },
+    "B#0": {
+     "events": [
+      [
+       "Posted"
+      ],
+      [
+       "Reserved",
+       1250,
+       50
+      ],
+      [
+       "Bound"
+      ],
+      [
+       "Voided",
+       50,
+       true,
+       0
+      ],
+      [
+       "Released",
+       1250
+      ]
+     ],
+     "claim": {
+      "defender": "executor",
+      "n": 4,
+      "games": [],
+      "status": "accepted"
+     },
+     "executor": "executor"
+    },
+    "C#0": {
+     "events": [
+      [
+       "Posted"
+      ],
+      [
+       "Reserved",
+       1250,
+       0
+      ],
+      [
+       "Bound"
+      ],
+      [
+       "Voided",
+       50,
+       true,
+       0
+      ],
+      [
+       "Released",
+       1250
+      ]
+     ],
+     "claim": {
+      "defender": "executor",
+      "n": 4,
+      "games": [],
+      "status": "accepted"
+     },
+     "executor": "executor"
+    },
+    "A#1": {
+     "events": [
+      [
+       "Posted"
+      ],
+      [
+       "Reserved",
+       1250,
+       100
+      ],
+      [
+       "Bound"
+      ],
+      [
+       "Settled",
+       true,
+       1000
+      ],
+      [
+       "Released",
+       1250
+      ]
+     ],
+     "claim": {
+      "defender": "executor",
+      "n": 96,
+      "games": [],
+      "status": "accepted"
+     },
+     "executor": "executor"
+    },
+    "B#1": {
+     "events": [
+      [
+       "Posted"
+      ],
+      [
+       "Reserved",
+       1250,
+       50
+      ],
+      [
+       "Bound"
+      ],
+      [
+       "Settled",
+       true,
+       1000
+      ],
+      [
+       "Released",
+       1250
+      ]
+     ],
+     "claim": {
+      "defender": "executor",
+      "n": 4,
+      "games": [],
+      "status": "accepted"
+     },
+     "executor": "executor"
+    },
+    "C#1": {
+     "events": [
+      [
+       "Posted"
+      ],
+      [
+       "Reserved",
+       1250,
+       0
+      ],
+      [
+       "Bound"
+      ],
+      [
+       "Settled",
+       true,
+       1000
+      ],
+      [
+       "Released",
+       1250
+      ]
+     ],
+     "claim": {
+      "defender": "executor",
+      "n": 4,
+      "games": [],
+      "status": "accepted"
+     },
+     "executor": "executor"
+    },
+    "R#0": {
+     "events": [
+      [
+       "Posted"
+      ],
+      [
+       "Expired"
+      ]
+     ],
+     "claim": null,
+     "executor": "executor"
+    }
+   },
+   "outputs": {
+    "A#0": {
+     "output": 777,
+     "trap": 0
+    },
+    "B#0": {
+     "output": 778,
+     "trap": 0
+    },
+    "C#0": {
+     "output": 1556,
+     "trap": 0
+    },
+    "A#1": {
+     "output": 55,
+     "trap": 0
+    },
+    "B#1": {
+     "output": 56,
+     "trap": 0
+    },
+    "C#1": {
+     "output": 112,
+     "trap": 0
+    }
+   },
+   "token_flows": {
+    "owner": {
+     "in": 1000000,
+     "out": 998250
+    },
+    "executor": {
+     "in": 100000,
+     "out": 103100
+    },
+    "liar": {
+     "in": 100000,
+     "out": 98650
+    }
+   },
+   "escrow_tokens_left": 0
+  },
+  "economics_sha256": "2f05829cc6b8c9ff85bc3b6e2a5e178b225b0743615ab008fc471e59c883e744",
+  "build": {
+   "OVM0Step": "3ceb3b588dc91c7d6eb3b8e427ab2ab77641d37e977d66b8919866dc7398587c",
+   "OVM0Inbox": "3104f6bc4573205fb7751fea7f492b20749a4f90083f6ca3e4795ab148ee7bbb",
+   "OVM0Dispute": "71206485322447c2da292d15ea73cfadbf6343e9ac723a13c6bf87ae3cb9e876",
+   "OmegaGraphEscrow": "e18358dbe9d46f27a645d4aafdba3ce0fc2173f940572f811ddc1af8582b87e2",
+   "OmegaSuperRootReferee": "356461f0e32908841d8e57be6b7906cbc56bae225600438ce225983d41e090f3",
+   "OmegaBondVault": "ccf1d6e993ab08e16a894785fd8dbed01758ebe967281786f043bc561076b5d7",
+   "OmegaCannonGames": "8cd87495ee3e36dfb081b4cea6a8ccb51d77e93b161e4834c1b6c2e4e55f0d64",
+   "OmegaCannonReferee": "b745e43be0966d85c58cf901575614109758d2742ae112837a7a15db33e652cd"
+  },
+  "build_sha256": "30a7cfac47c7cc6056e518352f0a9357874c8f7cde8c5347cd2053df92f72515",
+  "code_matches_build": true
+ }
+}

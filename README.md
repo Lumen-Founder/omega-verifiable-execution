@@ -12,6 +12,7 @@ dispute games for output roots, and a cloned Cannon game for MIPS64 programs.
 - One page: [`docs/world_computer/BRIEF_EN.md`](docs/world_computer/BRIEF_EN.md)
 - Run it yourself, locally with no funds or against our Sepolia run from your own RPC:
   [`docs/world_computer/REPRODUCE.md`](docs/world_computer/REPRODUCE.md)
+- Our Sepolia run, its closing balances and the two transcript checks: [`runs/sepolia/README.md`](runs/sepolia/README.md)
 - Layers and what each one trusts: [`docs/world_computer/LAYERS_AND_TRUST.md`](docs/world_computer/LAYERS_AND_TRUST.md)
 - Threat model: [`docs/world_computer/THREAT_MODEL.md`](docs/world_computer/THREAT_MODEL.md)
 - Contracts: [`omega_evm/src`](omega_evm/src). Python runtime: `omega_world`, `omega_compute`, `omega_kernel`.
