@@ -13,7 +13,7 @@ interface VmC {
     function expectRevert() external;
 }
 
-/// @title VerdictConformance — conformance suite for spec/ERC8183_EVALUATOR_VERDICTS.md (V1-V14)
+/// @title VerdictConformance — conformance suite for spec/ERC8183_EVALUATOR_VERDICTS.md (V1-V15)
 /// @notice To test an implementation, inherit this contract and implement the four hooks: deploy the evaluator bound
 ///  to an escrow, register a key, retire a key, revoke a key. Tests never assume error names, only that a call reverts
 ///  or succeeds and what the escrow and events show. The escrow is a mock of the ERC-8183 state machine.
@@ -238,6 +238,19 @@ abstract contract VerdictConformance {
         vm.prank(CLIENT);
         acp.fund(id, 1);
         _revertsSigned(ev, _v(id, 1), PK);
+    }
+
+    // ---------------------------------------------------------------- V15: an escrow refusal is not swallowed
+    function test_V15_escrow_refusal_reverts_and_leaves_nothing() public {
+        I.Verdict memory v = _v(job, 1);
+        (uint8 sv, bytes32 r, bytes32 s) = _sig(ev, v, PK);
+        bytes32 d = ev.digestOf(v);
+        acp.setPaused(true);
+        _reverts(ev, v, sv, r, s);
+        require(!ev.seen(d) && ev.decided(job) == bytes32(0) && _status(job) == 2, "V15 nothing recorded");
+        acp.setPaused(false);
+        ev.submitVerdict(v, sv, r, s);
+        require(_status(job) == 3 && ev.decided(job) == d, "V15 the same verdict still decides the job later");
     }
 
     // ---------------------------------------------------------------- V9, V10: outcomes

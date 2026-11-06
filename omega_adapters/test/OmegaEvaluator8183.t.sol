@@ -25,6 +25,12 @@ contract MockAgenticCommerce {
 
     error Unauthorized();
     error WrongStatus();
+    error Paused();
+    bool public paused; // lets the conformance suite make the escrow refuse a call (V15)
+
+    function setPaused(bool p) external {
+        paused = p;
+    }
 
     function createJob(address provider, address evaluator, uint256 expiredAt, string calldata desc) external returns (uint256 id) {
         id = ++jobCounter;
@@ -51,6 +57,7 @@ contract MockAgenticCommerce {
     }
 
     function complete(uint256 id, bytes32 reason, bytes calldata) external {
+        if (paused) revert Paused();
         IAgenticCommerce.Job storage j = jobs[id];
         if (msg.sender != j.evaluator) revert Unauthorized();
         if (j.status != SUBMITTED) revert WrongStatus();
@@ -58,6 +65,7 @@ contract MockAgenticCommerce {
     }
 
     function reject(uint256 id, bytes32 reason, bytes calldata) external {
+        if (paused) revert Paused();
         IAgenticCommerce.Job storage j = jobs[id];
         if (j.status == OPEN) {
             if (msg.sender != j.client) revert Unauthorized();

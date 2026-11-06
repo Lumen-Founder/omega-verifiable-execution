@@ -1,6 +1,6 @@
 # erc8183-verdicts
 
-Build, sign and verify **ERC-8183 Evaluator Verdicts** ([draft spec](../spec/ERC8183_EVALUATOR_VERDICTS.md), requirements V1–V14) from JavaScript.
+Build, sign and verify **ERC-8183 Evaluator Verdicts** ([draft spec](../spec/ERC8183_EVALUATOR_VERDICTS.md), requirements V1–V15) from JavaScript.
 
 - Works with any wallet. `typedData()` returns the standard EIP-712 object. viem, ethers, MetaMask (`eth_signTypedData_v4`) and hardware wallets sign it unchanged.
 - Small dependency tree: the audited `@noble/curves` and `@noble/hashes`, nothing else.

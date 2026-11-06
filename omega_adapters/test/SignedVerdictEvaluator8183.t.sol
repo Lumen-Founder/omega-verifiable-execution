@@ -190,7 +190,7 @@ contract SignedVerdictEvaluator8183Test {
 
     function test_not_this_evaluator_refused() public {
         uint256 other = _job(acp, address(0xBEEF));
-        _fail(ev, _v(other, 1), PK, E.NotEvaluator.selector);
+        _fail(ev, _v(other, 1), PK, MockAgenticCommerce.Unauthorized.selector); // the escrow's own rule (V6)
     }
 
     // ---------------------------------------------------------------- time and keys (#438)
@@ -255,6 +255,6 @@ contract SignedVerdictEvaluator8183Test {
         uint256 id = acp.createJob(PROV, address(ev), 2_000_000_000, "x");
         vm.prank(CLIENT);
         acp.fund(id, 1);
-        _fail(ev, _v(id, 1), PK, E.NotSubmitted.selector);
+        _fail(ev, _v(id, 1), PK, MockAgenticCommerce.WrongStatus.selector); // the escrow's own rule (V8)
     }
 }

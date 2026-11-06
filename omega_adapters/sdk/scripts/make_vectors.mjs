@@ -96,7 +96,7 @@ const negative = [
 ];
 
 const doc = {
-  spec: 'ERC-8183 Evaluator Verdicts (draft), requirements V1-V14',
+  spec: 'ERC-8183 Evaluator Verdicts (draft), requirements V1-V15',
   verdictType: S.VERDICT_TYPE,
   verdictTypehash: S.VERDICT_TYPEHASH,
   submitVerdictSelector: S.selector('submitVerdict((address,uint256,bytes32,bytes32,uint8,bytes32,uint64,uint64,bytes32,bytes32,int32,uint32,bytes32),uint8,bytes32,bytes32)'),

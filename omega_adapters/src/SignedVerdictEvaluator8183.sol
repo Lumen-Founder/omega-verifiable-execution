@@ -12,12 +12,13 @@ import {IERC8183VerdictEvaluator} from "./IERC8183VerdictEvaluator.sol";
 ///  calibration run they came from. Decisions: COMPLETE, REJECT, or COULD_NOT_CHECK (recorded, no state change, so
 ///  silence stays the evaluator's own failure and the job can still expire to a refund).
 /// @dev Limits, stated plainly: the ERC's getJob has no deliverable field, so the deliverable hash in a verdict is
-///  checked against the escrow's JobSubmitted event off chain, not here. Pre-audit, testnet only.
+///  checked against the escrow's JobSubmitted event off chain, not here. The evaluator reads no job state at all;
+///  it calls the ERC-8183 three-argument complete/reject and relies on the escrow's own evaluator and status rules
+///  (escrows with a two-argument form need a different call). Pre-audit, testnet only.
 contract SignedVerdictEvaluator8183 is IERC8183VerdictEvaluator {
     uint8 public constant COMPLETE = 1;
     uint8 public constant REJECT = 2;
     uint8 public constant COULD_NOT_CHECK = 3;
-    uint8 internal constant SUBMITTED = 2; // ERC-8183 JobStatus order: Open, Funded, Submitted, ...
 
     bytes32 public constant VERDICT_TYPEHASH = keccak256(
         "Verdict(address escrow,uint256 jobId,bytes32 deliverableHash,bytes32 criteriaHash,uint8 decision,"
@@ -53,8 +54,6 @@ contract SignedVerdictEvaluator8183 is IERC8183VerdictEvaluator {
     error BadSignature();
     error AlreadyDecided();
     error Replayed();
-    error NotEvaluator();
-    error NotSubmitted();
 
     constructor(IAgenticCommerce escrow_, address admin_) {
         _escrow = escrow_;
@@ -144,13 +143,13 @@ contract SignedVerdictEvaluator8183 is IERC8183VerdictEvaluator {
         if (decided[v.jobId] != bytes32(0)) revert AlreadyDecided();
         seen[digest] = true;
 
-        IAgenticCommerce.Job memory j = _escrow.getJob(v.jobId);
-        if (j.evaluator != address(this)) revert NotEvaluator();
-
         _record(v, digest);
         if (v.decision == COULD_NOT_CHECK) return digest; // recorded only; the job may still expire to a refund
-        if (j.status != SUBMITTED) revert NotSubmitted();
         decided[v.jobId] = digest;
+        // V6, V8, V15: the escrow enforces "caller is the job's evaluator" and the status rule (ERC-8183 SHALL).
+        // Its revert is not caught, so a refused call leaves nothing behind: not seen, not decided, no events.
+        // No getJob read: getJob is not in ERC-8183's normative interface and deployed escrows return different
+        // Job layouts (the ERC's reference text vs erc-8183/base-contracts), so decoding it breaks portability.
         if (v.decision == COMPLETE) _escrow.complete(v.jobId, digest, "");
         else _escrow.reject(v.jobId, digest, "");
     }

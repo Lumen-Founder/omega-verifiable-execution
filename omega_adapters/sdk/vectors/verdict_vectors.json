@@ -1,5 +1,5 @@
 {
-  "spec": "ERC-8183 Evaluator Verdicts (draft), requirements V1-V14",
+  "spec": "ERC-8183 Evaluator Verdicts (draft), requirements V1-V15",
   "verdictType": "Verdict(address escrow,uint256 jobId,bytes32 deliverableHash,bytes32 criteriaHash,uint8 decision,bytes32 detailHash,uint64 signedAt,uint64 expiresAt,bytes32 keyId,bytes32 modelId,int32 severityE4,uint32 severitySeE4,bytes32 calibrationRun)",
   "verdictTypehash": "0xa8c8780016aca8d562086acf78583968fa5a71473d3cb8e75f1192fd229e818b",
   "submitVerdictSelector": "0x353c6a7d",

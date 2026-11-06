@@ -23,7 +23,7 @@ Points raised on the ERC-8183 discussion thread, which this document collects:
 
 ## Specification
 
-The key words "MUST", "MUST NOT", "SHOULD" and "MAY" are to be interpreted as described in RFC 2119 and RFC 8174. Requirements are numbered `V1`–`V14`, and the conformance suite tests them by number.
+The key words "MUST", "MUST NOT", "SHOULD" and "MAY" are to be interpreted as described in RFC 2119 and RFC 8174. Requirements are numbered `V1`–`V15`, and the conformance suite tests them by number.
 
 ### Verdict
 
@@ -78,13 +78,15 @@ interface IERC8183VerdictEvaluator {
   - the key is not compromised
   - `v.signedAt <= block.timestamp`
   - `block.timestamp <= v.expiresAt`
-- **V6.** It MUST revert unless the job's `evaluator` is this contract.
+- **V6.** A `COMPLETE` or `REJECT` MUST revert unless the job's `evaluator` is this contract. ERC-8183 already requires the escrow to refuse `complete`/`reject` from anyone else, so an evaluator MAY rely on that refusal (V15) instead of reading job state. A `COULD_NOT_CHECK` changes no escrow state and needs no job read.
 - **V7.** It MUST NOT accept the same digest twice.
-- **V8.** On `COMPLETE` it MUST call the escrow's `complete(jobId, digest, ...)`. On `REJECT` it MUST call `reject(jobId, digest, ...)`. At most one of these may happen per job. It MUST revert if the job is not `Submitted`.
+- **V8.** On `COMPLETE` it MUST call the escrow's `complete(jobId, digest, ...)`. On `REJECT` it MUST call `reject(jobId, digest, ...)`. At most one of these may happen per job. A `COMPLETE` on a job that is not `Submitted` MUST revert (the escrow's own rule).
 - **V9.** `COULD_NOT_CHECK` MUST NOT change escrow state. It MUST still be recorded. A later `COMPLETE` or `REJECT` for the same job remains possible.
 - **V10.** It MUST revert on any decision other than 1, 2 or 3.
 - **V11.** Every accepted verdict MUST emit `VerdictRecorded` and `RaterMeasurement` with the verdict's fields.
 - Anyone MAY relay a signed verdict. The signature, not `msg.sender`, carries the authority.
+
+- **V15.** If the escrow call reverts, `submitVerdict` MUST revert. The evaluator MUST NOT catch the failure and record the job as decided or the digest as seen. A refused verdict must stay usable once the escrow accepts calls again.
 
 ### Keys
 
@@ -96,6 +98,11 @@ interface IERC8183VerdictEvaluator {
 - **V14.** If `modelId == 0`, the measurement fields carry no meaning and clients MUST ignore them.
 - A non-zero `modelId` SHOULD identify a published model and estimator version. `calibrationRun` SHOULD identify a published run whose input verdicts and output are retrievable, so anyone can recompute the severity.
 - Severity and its standard error SHOULD be the values estimated when the verdict was signed. The rater's fit statistics and severity history belong in the rater profile, which is off chain.
+
+### Escrow compatibility
+
+- ERC-8183's normative interface has no `getJob`. Deployed escrows return different `Job` layouts. The ERC's reference text uses 9 fields, `id` first and `status` eighth. erc-8183/base-contracts uses 13 fields, `status` second, `expiredAt` as `uint48`. An evaluator that ABI-decodes `getJob` works only on escrows with its own layout. This draft therefore never requires reading job state on chain.
+- ERC-8183 writes `complete(jobId, reason, optParams?)`. Deployed escrows implement either the three-argument form (the ERC's reference text, erc-8183/base-contracts) or a two-argument form. Their selectors differ. An evaluator MUST call the form its escrow implements, and a mismatch MUST revert (V15) rather than pass silently.
 
 ### Off-chain checks
 
