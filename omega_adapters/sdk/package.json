@@ -1,0 +1,24 @@
+{
+  "name": "erc8183-verdicts",
+  "version": "0.1.0",
+  "description": "Build, sign and verify ERC-8183 Evaluator Verdicts (EIP-712) for any wallet",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.mjs",
+  "types": "./src/index.d.ts",
+  "exports": { ".": { "types": "./src/index.d.ts", "default": "./src/index.mjs" } },
+  "files": ["src", "vectors"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "vectors": "node scripts/make_vectors.mjs",
+    "e2e": "node scripts/e2e_anvil.mjs"
+  },
+  "dependencies": {
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0"
+  },
+  "devDependencies": {
+    "ethers": "6.17.0",
+    "viem": "2.57.7"
+  }
+}
