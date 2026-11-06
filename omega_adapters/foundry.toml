@@ -7,3 +7,9 @@ solc_version = "0.8.28"
 evm_version = "cancun"
 optimizer = true
 optimizer_runs = 200
+# OpenZeppelin 5.6.1 (the version erc-8183/base-contracts@142e669c pins): `npm ci --ignore-scripts` in third_party/oz.
+remappings = [
+  "@openzeppelin/contracts/=third_party/oz/node_modules/@openzeppelin/contracts/",
+  "@openzeppelin/contracts-upgradeable/=third_party/oz/node_modules/@openzeppelin/contracts-upgradeable/",
+  "erc8183-base/=third_party/erc8183-base-contracts-142e669c/contracts/",
+]

@@ -128,6 +128,7 @@ interface IERC8183VerdictEvaluator {
 
 - `src/SignedVerdictEvaluator8183.sol`: reference evaluator, pre-audit.
 - `test/VerdictConformance.sol`: abstract conformance suite. An implementation passes by supplying a small adapter: how to deploy it, how to register a key, and how to retire or revoke one.
+- `test/integration/BaseContracts8183Conformance.sol`: the same 25 tests bound to the real erc-8183/base-contracts escrow (142e669c, behind an ERC1967 proxy). The four hooks are the same; inherit this contract instead to test on the real escrow. Settlement is checked twice, through the escrow's events and through token balances. The suite itself is in `test/VerdictConformanceBase.sol`, which takes an escrow binding. The escrow sources are unmodified copies listed with their hashes in `third_party/SOURCE.md`. To run everything: `cd omega_adapters && (cd third_party/oz && npm ci --ignore-scripts) && forge test`.
 - Off-chain signing: any wallet that supports EIP-712 `signTypedData` can sign a verdict, using the domain from `eip712Domain()`.
 - `sdk/`: a JavaScript SDK that builds, signs, verifies and encodes verdicts. Its digests and signatures match viem, ethers, Foundry `cast` and the reference contract. `sdk/vectors/verdict_vectors.json` holds cross-implementation test vectors and must-reject cases.
 - `src/SignedVerdictEvaluator8183TwoArg.sol`: the same evaluator for escrows with the two-argument `complete`/`reject`.
