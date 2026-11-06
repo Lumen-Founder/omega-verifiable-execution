@@ -1,0 +1,17 @@
+# Copy into your evaluator repository (merge with your own foundry.toml).
+# The suite pins solc 0.8.28 and OpenZeppelin 5.6.1, as erc-8183/base-contracts@142e669c does.
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.28"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+remappings = [
+  "omega/=lib/omega-verifiable-execution/omega_adapters/",
+  "@openzeppelin/contracts/=lib/omega-verifiable-execution/omega_adapters/third_party/oz/node_modules/@openzeppelin/contracts/",
+  "@openzeppelin/contracts-upgradeable/=lib/omega-verifiable-execution/omega_adapters/third_party/oz/node_modules/@openzeppelin/contracts-upgradeable/",
+  "erc8183-base/=lib/omega-verifiable-execution/omega_adapters/third_party/erc8183-base-contracts-142e669c/contracts/",
+]

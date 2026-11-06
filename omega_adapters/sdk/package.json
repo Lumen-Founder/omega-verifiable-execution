@@ -13,18 +13,23 @@
     },
     "./ratings": {
       "default": "./src/ratings.mjs"
+    },
+    "./terms": {
+      "default": "./src/terms.mjs"
     }
   },
   "files": [
     "src",
-    "vectors"
+    "vectors",
+    "bin"
   ],
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "vectors": "node scripts/make_vectors.mjs",
     "e2e": "node scripts/e2e_anvil.mjs",
     "e2e:calibration": "node scripts/e2e_calibration.mjs",
-    "collect": "node scripts/collect_ratings.mjs"
+    "collect": "node scripts/collect_ratings.mjs",
+    "e2e:xd": "node scripts/e2e_xd_anvil.mjs"
   },
   "dependencies": {
     "@noble/curves": "2.4.0",
@@ -33,5 +38,8 @@
   "devDependencies": {
     "ethers": "6.17.0",
     "viem": "2.57.7"
+  },
+  "bin": {
+    "omega-terms": "./bin/omega-terms.mjs"
   }
 }

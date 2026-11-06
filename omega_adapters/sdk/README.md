@@ -101,3 +101,38 @@ The end-to-end run deploys the reference evaluator and a mock ERC-8183 escrow on
 ## License
 
 MIT. The spec is CC0.
+
+## Commitment terms of the XD escrow (`erc8183-verdicts/terms`)
+
+For the escrow extension in `../src/escrow-xd/` (pre-audit). Domain `ERC8183CommitmentTerms`, version `2`.
+
+```js
+import * as T from './src/terms.mjs';
+
+// The 22 CommitmentTermsV2 fields, as the escrow's commitmentTermsOf(jobId) returns them.
+const h = T.termsHash(chainId, escrow, terms);          // the provider passes it to confirmTerms, the client to fundWithTermsHash
+const d = T.amendmentDigest(chainId, escrow, amendment); // what each party signs for amendHook
+const td = T.amendmentTypedData(chainId, escrow, amendment); // for wallets (viem / ethers signTypedData)
+T.shares(budget, evaluatorFeeBP, platformFeeBP);        // M1: what each payout right of a completed job is worth
+```
+
+`vectors/terms_vectors.json` holds 40 digests that this module, viem, ethers and the Solidity library agree on
+(`npm test`, and `forge test --match-path test/escrow-xd/TermsVectors.t.sol` from `omega_adapters/`).
+Regenerate with `node scripts/make_terms_vectors.mjs`.
+
+### Check what you sign: `omega-terms`
+
+Before a provider calls `confirmTerms`, or a client calls `fundWithTermsHash`, read the job from the escrow and
+recompute the hash yourself:
+
+```
+node bin/omega-terms.mjs read --rpc <url> --escrow <escrow address> --job <id>
+```
+
+It prints the 22 decoded fields, the escrow's hash, the locally recomputed hash and `match`. The exit code is 1 when
+they differ. `hash` and `amendment-digest` work offline on JSON files. In code: `T.readCommitmentTerms(provider,
+escrow, jobId)` with any EIP-1193 provider.
+
+`npm run e2e:xd` (anvil on PATH, `forge build` in the parent first) deploys the XD escrow with its four libraries on a
+local chain and checks the SDK and this CLI against it: the confirmed and funded hash, an `amendHook` signed with SDK
+signatures, and a DEFERRED claim (14 checks).

@@ -1,0 +1,15 @@
+# Copy to .github/workflows/erc8183-conformance.yml in your evaluator repository.
+name: erc8183-verdict-conformance
+on: [push, pull_request]
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      # OpenZeppelin 5.6.1 from the lockfile; install scripts disabled
+      - run: npm ci --ignore-scripts
+        working-directory: lib/omega-verifiable-execution/omega_adapters/third_party/oz
+      - run: forge test --match-contract MyEvaluatorConformance -vv

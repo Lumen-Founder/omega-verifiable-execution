@@ -1,0 +1,204 @@
+// Generates cross-implementation vectors for the XD commitment terms and hook amendments.
+// Every vector is computed by the SDK (terms.mjs) and checked against viem and ethers before it is written.
+// Writes: vectors/terms_vectors.json and ../test/escrow-xd/TermsVectors.t.sol (forge recomputes each digest with
+// CommitmentTermsLib, the code the escrow runs). Usage (from sdk/): node scripts/make_terms_vectors.mjs
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { hashTypedData } from 'viem';
+import { TypedDataEncoder } from 'ethers';
+import * as T from '../src/terms.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+
+function rng(seed) {
+  let x = BigInt(seed) | 1n;
+  const M = (1n << 64n) - 1n;
+  return () => {
+    x ^= x >> 12n; x ^= (x << 25n) & M; x ^= x >> 27n;
+    return (x * 0x2545f4914f6cdd1dn) & M;
+  };
+}
+const hex = (r, bytes) => {
+  let s = '';
+  while (s.length < bytes * 2) s += r().toString(16).padStart(16, '0');
+  return '0x' + s.slice(0, bytes * 2);
+};
+const uint = (r, bits) => {
+  const pick = Number(r() % 4n);
+  const max = (1n << BigInt(bits)) - 1n;
+  if (pick === 0) return 0n;
+  if (pick === 1) return max;
+  let v = 0n;
+  for (let i = 0; i < Math.ceil(bits / 64); i++) v = (v << 64n) | r();
+  return v & max;
+};
+const zeroOr = (r, v) => (r() % 3n === 0n ? '0x' + '00'.repeat(v.length / 2 - 1) : v);
+
+function randTerms(r) {
+  const t = {};
+  for (const [n, ty] of T.TERMS_FIELDS) {
+    if (ty === 'address') t[n] = zeroOr(r, hex(r, 20));
+    else if (ty === 'bytes32') t[n] = zeroOr(r, hex(r, 32));
+    else t[n] = uint(r, Number(ty.slice(4)));
+  }
+  t.termsVersion = 2n;
+  return t;
+}
+function randAmendment(r) {
+  const a = {};
+  for (const [n, ty] of T.AMENDMENT_FIELDS) {
+    if (ty === 'address') a[n] = zeroOr(r, hex(r, 20));
+    else if (ty === 'bytes32') a[n] = zeroOr(r, hex(r, 32));
+    else a[n] = uint(r, Number(ty.slice(4)));
+  }
+  return a;
+}
+
+// Fixed, readable first vectors; then random ones.
+const named = [
+  {
+    name: 'xd-default-immediate',
+    chainId: 1n,
+    escrow: '0x00000000000000000000000000000000000E5C40',
+    terms: {
+      jobId: 1n, client: '0x000000000000000000000000000000000000C11E', provider: '0x0000000000000000000000000000000000000B0B',
+      providerAgentId: 0n, evaluator: '0x000000000000000000000000000000000000E7A1',
+      providerRecipient: '0x0000000000000000000000000000000000000B0B',
+      paymentToken: '0x00000000000000000000000000000000000005DC', budget: 1000007n, expiredAt: 2000000000n,
+      hook: '0x0000000000000000000000000000000000000000', evaluatorFeeBP: 333n, platformFeeBP: 77n,
+      evaluatorFeeRecipient: '0x0000000000000000000000000000000000000FEE',
+      platformFeeRecipient: '0x0000000000000000000000000000000000007EA5', settlementMode: 0n,
+      hookCodeHash: '0x' + '00'.repeat(32), hookConfigHash: '0x' + '00'.repeat(32), hookClass: 0n, hookFaultPolicy: 0n,
+      auxHookGas: 100000n, faultWindow: 259200n, termsVersion: 2n,
+    },
+  },
+];
+named.push({ ...named[0], name: 'xd-default-deferred', terms: { ...named[0].terms, settlementMode: 1n } });
+
+const r = rng(0x8183);
+const termsVectors = [...named];
+for (let i = 0; termsVectors.length < 24; i++) {
+  termsVectors.push({ name: `random-${i}`, chainId: uint(r, 64) || 1n, escrow: hex(r, 20), terms: randTerms(r) });
+}
+const amendmentVectors = [];
+for (let i = 0; i < 16; i++) {
+  amendmentVectors.push({ name: `random-${i}`, chainId: uint(r, 64) || 1n, escrow: hex(r, 20), amendment: randAmendment(r) });
+}
+
+const viemOf = (td) => hashTypedData({ domain: td.domain, types: { [td.primaryType]: td.types[td.primaryType] }, primaryType: td.primaryType, message: td.message });
+const ethersOf = (td) => TypedDataEncoder.hash(td.domain, { [td.primaryType]: td.types[td.primaryType] }, td.message);
+
+for (const v of termsVectors) {
+  v.digest = T.termsHash(v.chainId, v.escrow, v.terms);
+  const td = T.termsTypedData(v.chainId, v.escrow, v.terms);
+  if (viemOf(td) !== v.digest || ethersOf(td) !== v.digest) throw new Error(`terms ${v.name}: implementations disagree`);
+}
+for (const v of amendmentVectors) {
+  v.digest = T.amendmentDigest(v.chainId, v.escrow, v.amendment);
+  const td = T.amendmentTypedData(v.chainId, v.escrow, v.amendment);
+  if (viemOf(td) !== v.digest || ethersOf(td) !== v.digest) throw new Error(`amendment ${v.name}: implementations disagree`);
+}
+
+const str = (x) => JSON.parse(JSON.stringify(x, (_, y) => (typeof y === 'bigint' ? y.toString() : y)));
+writeFileSync(
+  join(here, '..', 'vectors', 'terms_vectors.json'),
+  JSON.stringify(
+    {
+      note: 'XD commitment terms (CommitmentTermsV2) and hook amendments (HookAmendment), EIP-712, domain ' +
+        `"${T.TERMS_DOMAIN_NAME}" v"${T.TERMS_DOMAIN_VERSION}". Each digest agrees across the SDK, viem, ethers and ` +
+        'CommitmentTermsLib (forge test test/escrow-xd/TermsVectors.t.sol). Generated by scripts/make_terms_vectors.mjs.',
+      termsType: T.TERMS_TYPE,
+      amendmentType: T.AMENDMENT_TYPE,
+      terms: str(termsVectors),
+      amendments: str(amendmentVectors),
+    },
+    null,
+    2,
+  ) + '\n',
+);
+
+// ---- Solidity test with the same vectors embedded
+const lit = (ty, v) => {
+  if (ty === 'address') return `address(${v === '0x' + '00'.repeat(20) ? '0' : checksum(v)})`;
+  if (ty === 'bytes32') return `bytes32(${v})`;
+  return `${v.toString()}`;
+};
+function checksum(a) {
+  return T.termsTypedData(1n, a, named[0].terms).domain.verifyingContract; // reuse SDK checksumming
+}
+const termsCases = termsVectors.map((v, i) => `        if (i == ${i}) {
+            chainId = ${v.chainId};
+            escrow = ${lit('address', v.escrow)};
+            want = ${lit('bytes32', v.digest)};
+            t = L.TermsV2(${T.TERMS_FIELDS.map(([n, ty]) => `\n                ${lit(ty, v.terms[n])}`).join(',')}
+            );
+        }`).join('\n');
+const amendCases = amendmentVectors.map((v, i) => `        if (i == ${i}) {
+            chainId = ${v.chainId};
+            escrow = ${lit('address', v.escrow)};
+            want = ${lit('bytes32', v.digest)};
+            a = L.HookAmendment(${T.AMENDMENT_FIELDS.map(([n, ty]) => `\n                ${lit(ty, v.amendment[n])}`).join(',')}
+            );
+        }`).join('\n');
+
+const sol = `// SPDX-License-Identifier: MIT
+// GENERATED by sdk/scripts/make_terms_vectors.mjs. Do not edit by hand.
+pragma solidity 0.8.28;
+
+import {CommitmentTermsLib as L} from "../../src/escrow-xd/CommitmentTermsLib.sol";
+
+interface VmV {
+    function chainId(uint256) external;
+}
+
+contract TermsVectorHarness {
+    function termsHash(L.TermsV2 memory t, address escrow) external view returns (bytes32) {
+        return L.termsHash(t, escrow);
+    }
+
+    function amendmentDigest(L.HookAmendment calldata a, address escrow) external view returns (bytes32) {
+        return L.amendmentDigest(a, escrow);
+    }
+}
+
+/// @notice CommitmentTermsLib reproduces every SDK / viem / ethers vector in sdk/vectors/terms_vectors.json.
+contract TermsVectorsTest {
+    VmV internal constant vm = VmV(address(uint160(uint256(keccak256("hevm cheat code")))));
+    TermsVectorHarness internal h;
+
+    function setUp() public {
+        h = new TermsVectorHarness();
+    }
+
+    function test_terms_vectors() public {
+        for (uint256 i; i < ${termsVectors.length}; i++) {
+            (uint256 chainId, address escrow, bytes32 want, L.TermsV2 memory t) = _terms(i);
+            vm.chainId(chainId);
+            require(h.termsHash(t, escrow) == want, "terms vector mismatch");
+        }
+    }
+
+    function test_amendment_vectors() public {
+        for (uint256 i; i < ${amendmentVectors.length}; i++) {
+            (uint256 chainId, address escrow, bytes32 want, L.HookAmendment memory a) = _amendment(i);
+            vm.chainId(chainId);
+            require(h.amendmentDigest(a, escrow) == want, "amendment vector mismatch");
+        }
+    }
+
+    function _terms(uint256 i) internal pure returns (uint256 chainId, address escrow, bytes32 want, L.TermsV2 memory t) {
+${termsCases}
+    }
+
+    function _amendment(uint256 i)
+        internal
+        pure
+        returns (uint256 chainId, address escrow, bytes32 want, L.HookAmendment memory a)
+    {
+${amendCases}
+    }
+}
+`;
+writeFileSync(join(here, '..', '..', 'test', 'escrow-xd', 'TermsVectors.t.sol'), sol);
+console.log(`terms ${termsVectors.length}, amendments ${amendmentVectors.length}: SDK = viem = ethers; files written`);
