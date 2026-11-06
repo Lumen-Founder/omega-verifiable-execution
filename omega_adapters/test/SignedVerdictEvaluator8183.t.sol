@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAgenticCommerce} from "../src/OmegaEvaluator8183.sol";
 import {SignedVerdictEvaluator8183 as E} from "../src/SignedVerdictEvaluator8183.sol";
+import {IERC8183VerdictEvaluator as I} from "../src/IERC8183VerdictEvaluator.sol";
 import {MockAgenticCommerce} from "./OmegaEvaluator8183.t.sol";
 
 interface Vm2 {
@@ -44,8 +45,8 @@ contract SignedVerdictEvaluator8183Test {
         a.submit(id);
     }
 
-    function _v(uint256 id, uint8 decision) internal view returns (E.Verdict memory v) {
-        v = E.Verdict({
+    function _v(uint256 id, uint8 decision) internal view returns (I.Verdict memory v) {
+        v = I.Verdict({
             escrow: address(acp),
             jobId: id,
             deliverableHash: keccak256("deliverable bytes"),
@@ -62,12 +63,12 @@ contract SignedVerdictEvaluator8183Test {
         });
     }
 
-    function _send(E target, E.Verdict memory v, uint256 pk) internal returns (bytes32) {
+    function _send(E target, I.Verdict memory v, uint256 pk) internal returns (bytes32) {
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(pk, target.digestOf(v));
         return target.submitVerdict(v, sv, r, s);
     }
 
-    function _fail(E target, E.Verdict memory v, uint256 pk, bytes4 sel) internal {
+    function _fail(E target, I.Verdict memory v, uint256 pk, bytes4 sel) internal {
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(pk, target.digestOf(v));
         vm.expectRevert(sel);
         target.submitVerdict(v, sv, r, s);
@@ -101,7 +102,7 @@ contract SignedVerdictEvaluator8183Test {
     }
 
     function test_bad_decision_code() public {
-        E.Verdict memory v = _v(job, 4);
+        I.Verdict memory v = _v(job, 4);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         vm.expectRevert(E.BadDecision.selector);
         ev.submitVerdict(v, sv, r, s);
@@ -110,7 +111,7 @@ contract SignedVerdictEvaluator8183Test {
     // ---------------------------------------------------------------- replay (#437)
 
     function test_replay_same_verdict_refused() public {
-        E.Verdict memory v = _v(job, 3);
+        I.Verdict memory v = _v(job, 3);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         ev.submitVerdict(v, sv, r, s);
         vm.expectRevert(E.Replayed.selector);
@@ -124,7 +125,7 @@ contract SignedVerdictEvaluator8183Test {
 
     function test_replay_to_another_job_refused() public {
         uint256 job2 = _job(acp, address(ev));
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         v.jobId = job2;
         vm.expectRevert(E.BadSignature.selector);
@@ -137,7 +138,7 @@ contract SignedVerdictEvaluator8183Test {
         vm.prank(ADMIN);
         ev2.setKey(K1, vm.addr(PK), 1_000, 10_000_000_000);
         _job(acp2, address(ev2));
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         vm.expectRevert(E.WrongEscrow.selector); // escrow field names acp, ev2 serves acp2
         ev2.submitVerdict(v, sv, r, s);
@@ -150,7 +151,7 @@ contract SignedVerdictEvaluator8183Test {
         E ev3 = new E(IAgenticCommerce(address(acp)), ADMIN); // same escrow, same key, other contract
         vm.prank(ADMIN);
         ev3.setKey(K1, vm.addr(PK), 1_000, 10_000_000_000);
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         vm.expectRevert(E.BadSignature.selector); // EIP-712 domain binds verifyingContract and chain id
         ev3.submitVerdict(v, sv, r, s);
@@ -159,7 +160,7 @@ contract SignedVerdictEvaluator8183Test {
     // ---------------------------------------------------------------- binding and signature
 
     function test_tampered_measurement_refused() public {
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         v.severityE4 = 0;
         vm.expectRevert(E.BadSignature.selector);
@@ -167,7 +168,7 @@ contract SignedVerdictEvaluator8183Test {
     }
 
     function test_tampered_deliverable_refused() public {
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         v.deliverableHash = keccak256("other bytes");
         vm.expectRevert(E.BadSignature.selector);
@@ -179,7 +180,7 @@ contract SignedVerdictEvaluator8183Test {
     }
 
     function test_high_s_refused() public {
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, ev.digestOf(v));
         bytes32 s2 = bytes32(N - uint256(s));
         uint8 v2 = sv == 27 ? 28 : 27;
@@ -200,7 +201,7 @@ contract SignedVerdictEvaluator8183Test {
     }
 
     function test_future_signed_at_refused() public {
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         v.signedAt = 6_000;
         _fail(ev, v, PK, E.NotYetSigned.selector);
     }
@@ -219,7 +220,7 @@ contract SignedVerdictEvaluator8183Test {
     }
 
     function test_key_not_yet_valid_refused() public {
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         v.signedAt = 500;
         _fail(ev, v, PK, E.KeyNotValid.selector);
     }
@@ -231,7 +232,7 @@ contract SignedVerdictEvaluator8183Test {
     }
 
     function test_unknown_key_id_refused() public {
-        E.Verdict memory v = _v(job, 1);
+        I.Verdict memory v = _v(job, 1);
         v.keyId = keccak256("nobody");
         _fail(ev, v, PK, E.KeyNotValid.selector);
     }

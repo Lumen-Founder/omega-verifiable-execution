@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IAgenticCommerce} from "./OmegaEvaluator8183.sol";
+import {IERC8183VerdictEvaluator} from "./IERC8183VerdictEvaluator.sol";
 
 /// @title SignedVerdictEvaluator8183 — an ERC-8183 evaluator that acts only on a signed, bound verdict.
 /// @notice Reference for the evaluator-accountability discussion on the ERC-8183 thread (ethereum-magicians #436-#442).
@@ -12,7 +13,7 @@ import {IAgenticCommerce} from "./OmegaEvaluator8183.sol";
 ///  silence stays the evaluator's own failure and the job can still expire to a refund).
 /// @dev Limits, stated plainly: the ERC's getJob has no deliverable field, so the deliverable hash in a verdict is
 ///  checked against the escrow's JobSubmitted event off chain, not here. Pre-audit, testnet only.
-contract SignedVerdictEvaluator8183 {
+contract SignedVerdictEvaluator8183 is IERC8183VerdictEvaluator {
     uint8 public constant COMPLETE = 1;
     uint8 public constant REJECT = 2;
     uint8 public constant COULD_NOT_CHECK = 3;
@@ -25,23 +26,9 @@ contract SignedVerdictEvaluator8183 {
     );
     bytes32 internal constant DOMAIN_TYPEHASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    string internal constant NAME = "SignedVerdictEvaluator8183";
+    string internal constant VERSION = "1";
     uint256 internal constant HALF_N = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
-
-    struct Verdict {
-        address escrow;
-        uint256 jobId;
-        bytes32 deliverableHash;
-        bytes32 criteriaHash;
-        uint8 decision;
-        bytes32 detailHash; // hash of the full signed verdict document (RFC 8785 JSON), fetchable and re-runnable
-        uint64 signedAt;
-        uint64 expiresAt;
-        bytes32 keyId;
-        bytes32 modelId;
-        int32 severityE4;
-        uint32 severitySeE4;
-        bytes32 calibrationRun;
-    }
 
     struct Key {
         address signer;
@@ -51,20 +38,10 @@ contract SignedVerdictEvaluator8183 {
     }
 
     address public immutable admin; // the party that configures rater keys (client, committee or registry)
-    IAgenticCommerce public immutable escrow;
+    IAgenticCommerce internal immutable _escrow;
     mapping(bytes32 => Key) public keys;
     mapping(uint256 => bytes32) public decided; // jobId => digest of the verdict that completed or rejected it
     mapping(bytes32 => bool) public seen; // every accepted verdict digest, so no verdict is recorded twice
-
-    event KeySet(bytes32 indexed keyId, address signer, uint64 validFrom, uint64 validUntil);
-    event KeyRevoked(bytes32 indexed keyId);
-    event VerdictRecorded(
-        uint256 indexed jobId, bytes32 indexed digest, bytes32 indexed keyId, uint8 decision, bytes32 deliverableHash,
-        bytes32 criteriaHash
-    );
-    event RaterMeasurement(
-        bytes32 indexed digest, bytes32 indexed modelId, int32 severityE4, uint32 severitySeE4, bytes32 calibrationRun
-    );
 
     error NotAdmin();
     error KeyExists();
@@ -80,7 +57,7 @@ contract SignedVerdictEvaluator8183 {
     error NotSubmitted();
 
     constructor(IAgenticCommerce escrow_, address admin_) {
-        escrow = escrow_;
+        _escrow = escrow_;
         admin = admin_;
     }
 
@@ -108,9 +85,22 @@ contract SignedVerdictEvaluator8183 {
 
     // ------------------------------------------------------------------ verdicts
 
+    function escrow() external view returns (address) {
+        return address(_escrow);
+    }
+
+    /// @notice EIP-5267: name, version, chainId and verifyingContract are set (fields 0x0f)
+    function eip712Domain()
+        external
+        view
+        returns (bytes1, string memory, string memory, uint256, address, bytes32, uint256[] memory)
+    {
+        return (hex"0f", NAME, VERSION, block.chainid, address(this), bytes32(0), new uint256[](0));
+    }
+
     function domainSeparator() public view returns (bytes32) {
         return keccak256(
-            abi.encode(DOMAIN_TYPEHASH, keccak256("SignedVerdictEvaluator8183"), keccak256("1"), block.chainid, address(this))
+            abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(NAME)), keccak256(bytes(VERSION)), block.chainid, address(this))
         );
     }
 
@@ -138,7 +128,7 @@ contract SignedVerdictEvaluator8183 {
 
     /// @notice anyone may relay a signed verdict; the signature, not the caller, carries the authority.
     function submitVerdict(Verdict calldata v, uint8 sigV, bytes32 r, bytes32 s) external returns (bytes32 digest) {
-        if (v.escrow != address(escrow)) revert WrongEscrow();
+        if (v.escrow != address(_escrow)) revert WrongEscrow();
         if (v.decision < COMPLETE || v.decision > COULD_NOT_CHECK) revert BadDecision();
         if (block.timestamp > v.expiresAt) revert Expired();
         if (v.signedAt > block.timestamp) revert NotYetSigned();
@@ -154,15 +144,15 @@ contract SignedVerdictEvaluator8183 {
         if (decided[v.jobId] != bytes32(0)) revert AlreadyDecided();
         seen[digest] = true;
 
-        IAgenticCommerce.Job memory j = escrow.getJob(v.jobId);
+        IAgenticCommerce.Job memory j = _escrow.getJob(v.jobId);
         if (j.evaluator != address(this)) revert NotEvaluator();
 
         _record(v, digest);
         if (v.decision == COULD_NOT_CHECK) return digest; // recorded only; the job may still expire to a refund
         if (j.status != SUBMITTED) revert NotSubmitted();
         decided[v.jobId] = digest;
-        if (v.decision == COMPLETE) escrow.complete(v.jobId, digest, "");
-        else escrow.reject(v.jobId, digest, "");
+        if (v.decision == COMPLETE) _escrow.complete(v.jobId, digest, "");
+        else _escrow.reject(v.jobId, digest, "");
     }
 
     function _record(Verdict calldata v, bytes32 digest) internal {
