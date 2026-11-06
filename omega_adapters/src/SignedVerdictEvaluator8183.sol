@@ -150,8 +150,18 @@ contract SignedVerdictEvaluator8183 is IERC8183VerdictEvaluator {
         // Its revert is not caught, so a refused call leaves nothing behind: not seen, not decided, no events.
         // No getJob read: getJob is not in ERC-8183's normative interface and deployed escrows return different
         // Job layouts (the ERC's reference text vs erc-8183/base-contracts), so decoding it breaks portability.
-        if (v.decision == COMPLETE) _escrow.complete(v.jobId, digest, "");
-        else _escrow.reject(v.jobId, digest, "");
+        _settle(v.jobId, digest, v.decision == COMPLETE);
+    }
+
+    /// @dev The escrow call. ERC-8183's reference text and erc-8183/base-contracts take (jobId, reason, optParams);
+    ///  SignedVerdictEvaluator8183TwoArg overrides this for escrows with (jobId, reason). A revert must propagate (V15).
+    function _settle(uint256 jobId, bytes32 digest, bool complete_) internal virtual {
+        if (complete_) _escrow.complete(jobId, digest, "");
+        else _escrow.reject(jobId, digest, "");
+    }
+
+    function _escrowAddress() internal view returns (address) {
+        return address(_escrow);
     }
 
     function _record(Verdict calldata v, bytes32 digest) internal {

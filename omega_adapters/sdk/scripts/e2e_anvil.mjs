@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { createPublicClient, createWalletClient, http, decodeFunctionResult, encodeFunctionData } from 'viem';
 import { foundry } from 'viem/chains';
 import * as S from '../src/index.mjs';
+import { readVerdictLogs, buildRatings } from '../src/ratings.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const art = (p) => JSON.parse(readFileSync(join(root, 'out', p), 'utf8'));
@@ -136,6 +137,17 @@ try {
   await send(evaluator, EV.abi, 'revokeKey', [keyId], ADMIN);
   const kRev = await S.readKey(provider, evaluator, keyId);
   check('V13 after revoke, readKey shows compromised and verdict refused', kRev.compromised && !S.verifyVerdict({ domain, verdict: v4b, signature: s4b, key: kRev }).ok && (await sendRaw(S.submitVerdictTx(evaluator, v4b, s4b), RELAYER)) === 'revert');
+
+  // D4 chain path: the evaluator's VerdictRecorded logs become ratings (accepted verdicts only)
+  const logs = await readVerdictLogs(provider, evaluator);
+  const accepted = [s1.digest, s2b.digest, s3.digest, s5.digest];
+  const rt = buildRatings({ logs });
+  check('D4 logs: 5 accepted verdicts read (4 decisions + 1 could-not-check), refused ones absent',
+    logs.length === 5 && accepted.every((d) => logs.some((l) => l.digest === d)) && rt.ratings.length === 4 && rt.counts.couldNotCheck === 1,
+    JSON.stringify(rt.counts));
+  check('D4 logs: item binds escrow, job and deliverable; x = 1 for COMPLETE, 0 for REJECT',
+    rt.ratings.find((r) => r.digests[0] === s1.digest.toLowerCase())?.x === 1 && rt.ratings.find((r) => r.digests[0] === s2b.digest.toLowerCase())?.x === 0 &&
+    rt.ratings.every((r) => r.item.startsWith(S.checksumAddress(escrow) + ':')));
 } finally {
   anvil.kill();
 }

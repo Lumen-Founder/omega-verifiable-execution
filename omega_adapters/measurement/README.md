@@ -101,3 +101,31 @@ Not covered:
 - No rater drift over time.
 - No collusion or strategic raters.
 - No real chain data. Today's deployments have almost no shared third-party ratings, per the census in #430.
+
+## Calibration runs (`calibrate.py`)
+
+This turns verdicts into a severity table that anyone can recompute. Each verdict then points at that table through `calibrationRun`.
+
+1. `sdk/scripts/collect_ratings.mjs` builds a ratings file (`erc8183-ratings/0.1`).
+   - Inputs: signed verdict records, such as committee ratings or calibration jobs that never touch the chain, together with the raters' key records. It can also read an evaluator's `VerdictRecorded` logs.
+   - Every record is verified first: signature, key window, revocation, decision.
+   - The output is one rating per rater and item, where the item is `escrow:jobId:deliverableHash`. COMPLETE counts 1 and REJECT counts 0. COULD_NOT_CHECK is counted but not rated.
+   - Forged records, unknown keys and conflicting duplicates are excluded, and each exclusion is listed with its reason.
+2. `python calibrate.py ratings.json --out run.json [--anchors anchors.json]` writes `erc8183-calibration-run/0.1`.
+   - `runId` is the sha256 of the canonical JSON of {estimator file hash, options, sorted ratings}.
+   - The output also holds, per rater: severity, SE, `severityE4`/`severitySeE4`, infit, outfit, the infit ratio against a bootstrap null, and the rater's connected group.
+   - `design.comparableAcrossAllRaters` is false when raters fall into disconnected groups and no anchors tie them together.
+3. A rater's next verdict carries `severityE4`, `severitySeE4` and `calibrationRun = runId`. Anyone holding the published ratings file can recompute the same `runId` and table.
+
+End-to-end check: `node sdk/scripts/e2e_calibration.mjs`, with `PYTHON` set to a Python that has numpy. The setup is 21 simulated raters and 300 items with 3 ratings each, all signed with the SDK and collected. Three bad records are added.
+
+| Check | Result |
+|---|---|
+| Collection | 900 ratings, 2 records excluded with reasons, 1 COULD_NOT_CHECK counted |
+| Reproducibility | the same `runId` and table on a second run; one changed rating gives a new `runId` |
+| Rotating committees | one connected group |
+| Severity recovery | correlation 0.887 against an attainable ~0.90 for 43 ratings per rater; RMSE 0.375 against a reported SE of 0.363 |
+| Fixed committees | flagged as 7 groups that cannot be compared |
+| Use in a verdict | a verdict carrying the run's severity and `runId` verifies |
+
+An earlier draft of this test used committees {5j, 5j+7, 5j+14} mod 21. Their members always share a residue mod 7, so the design splits into 7 groups. `calibrate.py` reported exactly that, which is the failure it exists to catch.

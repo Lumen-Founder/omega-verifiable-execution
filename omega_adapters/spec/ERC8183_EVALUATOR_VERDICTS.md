@@ -130,7 +130,8 @@ interface IERC8183VerdictEvaluator {
 - `test/VerdictConformance.sol`: abstract conformance suite. An implementation passes by supplying a small adapter: how to deploy it, how to register a key, and how to retire or revoke one.
 - Off-chain signing: any wallet that supports EIP-712 `signTypedData` can sign a verdict, using the domain from `eip712Domain()`.
 - `sdk/`: a JavaScript SDK that builds, signs, verifies and encodes verdicts. Its digests and signatures match viem, ethers, Foundry `cast` and the reference contract. `sdk/vectors/verdict_vectors.json` holds cross-implementation test vectors and must-reject cases.
-- `measurement/`: many-facet Rasch estimator and the committee design simulation.
+- `src/SignedVerdictEvaluator8183TwoArg.sol`: the same evaluator for escrows with the two-argument `complete`/`reject`.
+- `measurement/`: many-facet Rasch estimator, the committee design simulation, and `calibrate.py`. It turns a ratings file (`sdk/src/ratings.mjs`, built from verified verdicts) into a severity table with a reproducible `runId` for `calibrationRun`, and it flags designs whose raters are not connected.
 
 ## Copyright
 

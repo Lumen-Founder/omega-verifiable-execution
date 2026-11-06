@@ -63,6 +63,22 @@ const tx = V.submitVerdictTx(evaluator, verdict, sig); // { to, data }
 
 `verifyVerdict` cannot check V6–V9, because they depend on escrow and job state. The contract enforces them.
 
+## Calibration ratings (D4)
+
+`src/ratings.mjs` (`import { buildRatings, readVerdictLogs } from 'erc8183-verdicts/ratings'`) turns verdicts into the ratings file that `../measurement/calibrate.py` estimates rater severity from.
+- Signed records are verified before they count. A forged signature, an unknown key, a revoked key or a conflicting duplicate is excluded, and each exclusion is listed with its reason.
+- Chain logs (`VerdictRecorded`) are taken as already verified by the contract that emitted them.
+
+CLI: `npm run collect -- --records verdicts.jsonl --keys keys.json --out ratings.json`, or `--rpc URL --evaluator 0x...`.
+
+`npm run e2e:calibration` (with `PYTHON` set to a Python that has numpy) runs the whole loop: 21 simulated raters sign 900 verdicts, the file is collected and calibrated, the `runId` is checked to be reproducible, a fixed-committee design is flagged as disconnected, and a new verdict carrying the run's severity and `runId` verifies.
+
+## Escrow forms
+
+- `SignedVerdictEvaluator8183` calls the three-argument `complete/reject(jobId, reason, optParams)`. This is the ERC's reference text and erc-8183/base-contracts.
+- `SignedVerdictEvaluator8183TwoArg` calls `(jobId, reason)`.
+- Neither reads `getJob`. A mismatched pairing reverts, so nothing is recorded.
+
 ## Test vectors
 
 [`vectors/verdict_vectors.json`](vectors/verdict_vectors.json) holds 8 verdicts. Each comes with its domain separator, struct hash, digest, signature and calldata, and the file adds 3 signatures that must be refused (V4). An implementation in another language can check itself field by field. The signing keys are public test keys (`0xA11CE`, `0xB0B`) and must never hold funds. `npm run vectors` regenerates the file, and it refuses to write any vector on which the SDK, viem, ethers and `cast` disagree.
@@ -71,8 +87,8 @@ const tx = V.submitVerdictTx(evaluator, verdict, sig); // { to, data }
 
 ```bash
 npm install
-npm test          # 21 tests: 300 random verdicts vs viem and ethers, signatures, calldata, EIP-5267 decoding, RFC 8785, vectors
-npm run e2e       # needs anvil and `forge build` in ../ : 22 checks against the deployed reference evaluator
+npm test          # 24 tests: 300 random verdicts vs viem and ethers, signatures, calldata, EIP-5267 decoding, RFC 8785, vectors, ratings collection
+npm run e2e       # needs anvil and `forge build` in ../ : 24 checks against the deployed reference evaluator, incl. reading its logs as ratings
 ```
 
 The end-to-end run deploys the reference evaluator and a mock ERC-8183 escrow on a local anvil chain, then checks:

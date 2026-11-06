@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAgenticCommerce} from "../src/OmegaEvaluator8183.sol";
 import {SignedVerdictEvaluator8183 as E} from "../src/SignedVerdictEvaluator8183.sol";
 import {IERC8183VerdictEvaluator as I} from "../src/IERC8183VerdictEvaluator.sol";
+import {SignedVerdictEvaluator8183TwoArg as E2} from "../src/SignedVerdictEvaluator8183TwoArg.sol";
 
 interface VmL {
     function prank(address) external;
@@ -72,10 +73,45 @@ contract MockBaseLayoutEscrow {
     }
 }
 
-/// @dev A two-argument escrow (complete(uint256,bytes32)), as some deployed ERC-8183 variants have.
+/// @dev A two-argument escrow (complete(uint256,bytes32)), as some deployed ERC-8183 variants have. It applies the
+///  ERC-8183 rules itself: only the job's evaluator; complete only when Submitted; reject when Funded or Submitted.
 contract MockTwoArgEscrow {
-    function complete(uint256, bytes32) external {}
-    function reject(uint256, bytes32) external {}
+    struct J {
+        address evaluator;
+        uint8 status; // 1 Funded, 2 Submitted, 3 Completed, 4 Rejected
+        bytes32 reason;
+    }
+    mapping(uint256 => J) public jobs;
+    uint256 public n;
+    bool public paused;
+    error Unauthorized();
+    error WrongStatus();
+    error Paused();
+
+    function create(address evaluator, uint8 status) external returns (uint256 id) {
+        id = ++n;
+        jobs[id] = J(evaluator, status, bytes32(0));
+    }
+
+    function setPaused(bool p) external {
+        paused = p;
+    }
+
+    function complete(uint256 id, bytes32 reason) external {
+        if (paused) revert Paused();
+        J storage j = jobs[id];
+        if (j.status != 2) revert WrongStatus();
+        if (msg.sender != j.evaluator) revert Unauthorized();
+        (j.status, j.reason) = (3, reason);
+    }
+
+    function reject(uint256 id, bytes32 reason) external {
+        if (paused) revert Paused();
+        J storage j = jobs[id];
+        if (j.status != 1 && j.status != 2) revert WrongStatus();
+        if (msg.sender != j.evaluator) revert Unauthorized();
+        (j.status, j.reason) = (4, reason);
+    }
 }
 
 contract EscrowLayoutsTest {
@@ -127,7 +163,65 @@ contract EscrowLayoutsTest {
         require(!ev.seen(d), "nothing recorded");
     }
 
-    function test_two_argument_escrow_is_not_supported_and_fails_loudly() public {
+    function _deploy2(address escrow) internal returns (E2 ev) {
+        vm.warp(5_000);
+        ev = new E2(escrow, ADMIN);
+        vm.prank(ADMIN);
+        ev.setKey(K1, vm.addr(PK), 1_000, 10_000_000_000);
+    }
+
+    function _send(E ev, I.Verdict memory v) internal returns (bytes32 d, bool ok) {
+        d = ev.digestOf(v);
+        (uint8 sv, bytes32 r, bytes32 s) = vm.sign(PK, d);
+        try ev.submitVerdict(v, sv, r, s) {
+            ok = true;
+        } catch {}
+    }
+
+    function test_two_arg_variant_completes_rejects_and_records() public {
+        MockTwoArgEscrow t = new MockTwoArgEscrow();
+        E2 ev = _deploy2(address(t));
+        uint256 a = t.create(address(ev), 2);
+        (bytes32 d, bool ok) = _send(ev, _v(address(t), a, 1));
+        (, uint8 st, bytes32 why) = t.jobs(a);
+        require(ok && st == 3 && why == d, "complete");
+        uint256 b = t.create(address(ev), 2);
+        (, ok) = _send(ev, _v(address(t), b, 3));
+        (, st,) = t.jobs(b);
+        require(ok && st == 2, "could-not-check leaves the job");
+        (d, ok) = _send(ev, _v(address(t), b, 2));
+        (, st, why) = t.jobs(b);
+        require(ok && st == 4 && why == d, "reject");
+    }
+
+    function test_two_arg_variant_escrow_rules_and_v15() public {
+        MockTwoArgEscrow t = new MockTwoArgEscrow();
+        E2 ev = _deploy2(address(t));
+        uint256 other = t.create(address(0xBEEF), 2);
+        (bytes32 d, bool ok) = _send(ev, _v(address(t), other, 1));
+        require(!ok && !ev.seen(d), "V6 via escrow: job of another evaluator refused, nothing recorded");
+        uint256 funded = t.create(address(ev), 1);
+        (d, ok) = _send(ev, _v(address(t), funded, 1));
+        require(!ok && !ev.seen(d), "V8 via escrow: complete on an unsubmitted job refused");
+        uint256 j = t.create(address(ev), 2);
+        t.setPaused(true);
+        (d, ok) = _send(ev, _v(address(t), j, 1));
+        require(!ok && !ev.seen(d) && ev.decided(j) == bytes32(0), "V15 refusal leaves nothing");
+        t.setPaused(false);
+        (d, ok) = _send(ev, _v(address(t), j, 1));
+        (, uint8 st,) = t.jobs(j);
+        require(ok && st == 3, "V15 the same verdict decides later");
+    }
+
+    function test_two_arg_variant_on_three_arg_escrow_fails_loudly() public {
+        MockBaseLayoutEscrow b = new MockBaseLayoutEscrow();
+        E2 ev = _deploy2(address(b));
+        uint256 j = b.createSubmitted(address(0xE0E0), address(ev));
+        (bytes32 d, bool ok) = _send(ev, _v(address(b), j, 1));
+        require(!ok && !ev.seen(d) && b.statusOf(j) == 2, "selector mismatch reverts, nothing recorded");
+    }
+
+    function test_three_arg_evaluator_on_two_arg_escrow_fails_loudly() public {
         MockTwoArgEscrow t = new MockTwoArgEscrow();
         E ev = _deploy(address(t));
         I.Verdict memory v = _v(address(t), 1, 1);
