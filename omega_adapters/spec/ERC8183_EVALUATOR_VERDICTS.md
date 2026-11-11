@@ -2,6 +2,7 @@
 title: ERC-8183 Evaluator Verdicts
 description: Signed, job-bound evaluator verdicts with key lifecycle, a "could not check" outcome and optional rater measurement for ERC-8183 evaluators
 status: Draft (pre-proposal, for discussion on ethereum-magicians topic 27902)
+revised: 2026-11-12 (V5, V13: a key's window is judged at block.timestamp, not at the signer-written signedAt)
 type: Standards Track
 category: ERC
 requires: 712, 5267, 8183
@@ -74,9 +75,8 @@ interface IERC8183VerdictEvaluator {
 - **V3.** It MUST revert if `v.escrow` is not the evaluator's escrow.
 - **V4.** It MUST revert unless the signature recovers the signer of `keys[v.keyId]`. It MUST revert on `s > secp256k1n/2` or `sigV` ∉ {27, 28}.
 - **V5.** It MUST revert unless all of the following hold:
-  - `validFrom <= v.signedAt < validUntil`
+  - `validFrom <= v.signedAt <= block.timestamp < validUntil`: the key's window is judged at `block.timestamp`, the clock the contract can trust, not at `v.signedAt`, which the signer writes
   - the key is not compromised
-  - `v.signedAt <= block.timestamp`
   - `block.timestamp <= v.expiresAt`
 - **V6.** A `COMPLETE` or `REJECT` MUST revert unless the job's `evaluator` is this contract. ERC-8183 already requires the escrow to refuse `complete`/`reject` from anyone else, so an evaluator MAY rely on that refusal (V15) instead of reading job state. A `COULD_NOT_CHECK` changes no escrow state and needs no job read.
 - **V7.** It MUST NOT accept the same digest twice.
@@ -91,7 +91,10 @@ interface IERC8183VerdictEvaluator {
 ### Keys
 
 - **V12.** A `keyId` MUST NOT be reassigned to another signer.
-- **V13.** Retiring a key (lowering `validUntil`) MUST keep verdicts signed before the new `validUntil` acceptable. Revoking a key (compromise) MUST make every verdict signed by it unacceptable.
+- **V13.** Retiring a key (lowering `validUntil`) MUST stop it from settling anything from the new `validUntil` on, whatever `signedAt` its verdicts carry. Verdicts recorded before the retirement stay valid. To judge an earlier verdict, a verifier MUST use the timestamp of the block that recorded its hash (`VerdictRecorded`, the escrow's `reason`, or an on-chain log head that contains it) and MUST NOT rely on the time written inside the verdict. Revoking a key (compromise) MUST make every verdict signed by it unacceptable from then on.
+  - Why: `signedAt` is written by the signer. A window checked against it binds only an honest signer, so a retired key could sign a new verdict, date it inside its old window and still settle a job. The same holds off chain: published start and stop dates say when a key was allowed to sign, not when a given verdict was signed; only the chain fixes that.
+  - Cost: a verdict signed just before retirement but not yet submitted must be signed again with the new key.
+  - Credit: reported by Douglas Borthwick on ethereum-magicians (ERC-8183 thread), against commit 795ac2f.
 
 ### Measurement fields
 
@@ -128,7 +131,7 @@ interface IERC8183VerdictEvaluator {
 
 - `src/SignedVerdictEvaluator8183.sol`: reference evaluator, pre-audit.
 - `test/VerdictConformance.sol`: abstract conformance suite. An implementation passes by supplying a small adapter: how to deploy it, how to register a key, and how to retire or revoke one.
-- `test/integration/BaseContracts8183Conformance.sol`: the same 25 tests bound to the real erc-8183/base-contracts escrow (142e669c, behind an ERC1967 proxy). The four hooks are the same; inherit this contract instead to test on the real escrow. Settlement is checked twice, through the escrow's events and through token balances. The suite itself is in `test/VerdictConformanceBase.sol`, which takes an escrow binding. The escrow sources are unmodified copies listed with their hashes in `third_party/SOURCE.md`. To run everything: `cd omega_adapters && (cd third_party/oz && npm ci --ignore-scripts) && forge test`.
+- `test/integration/BaseContracts8183Conformance.sol`: the same 27 tests bound to the real erc-8183/base-contracts escrow (142e669c, behind an ERC1967 proxy). The four hooks are the same; inherit this contract instead to test on the real escrow. Settlement is checked twice, through the escrow's events and through token balances. The suite itself is in `test/VerdictConformanceBase.sol`, which takes an escrow binding. The escrow sources are unmodified copies listed with their hashes in `third_party/SOURCE.md`. To run everything: `cd omega_adapters && (cd third_party/oz && npm ci --ignore-scripts) && forge test`.
 - Off-chain signing: any wallet that supports EIP-712 `signTypedData` can sign a verdict, using the domain from `eip712Domain()`.
 - `sdk/`: a JavaScript SDK that builds, signs, verifies and encodes verdicts. Its digests and signatures match viem, ethers, Foundry `cast` and the reference contract. `sdk/vectors/verdict_vectors.json` holds cross-implementation test vectors and must-reject cases.
 - `src/SignedVerdictEvaluator8183TwoArg.sol`: the same evaluator for escrows with the two-argument `complete`/`reject`.

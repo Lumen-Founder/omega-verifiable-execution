@@ -87,8 +87,8 @@ CLI: `npm run collect -- --records verdicts.jsonl --keys keys.json --out ratings
 
 ```bash
 npm install
-npm test          # 24 tests: 300 random verdicts vs viem and ethers, signatures, calldata, EIP-5267 decoding, RFC 8785, vectors, ratings collection
-npm run e2e       # needs anvil and `forge build` in ../ : 24 checks against the deployed reference evaluator, incl. reading its logs as ratings
+npm test          # 34 tests: 300 random verdicts vs viem and ethers, signatures, calldata, EIP-5267 decoding, RFC 8785, vectors, ratings collection
+npm run e2e       # needs anvil and `forge build` in ../ : 25 checks against the deployed reference evaluator, incl. reading its logs as ratings
 ```
 
 The end-to-end run deploys the reference evaluator and a mock ERC-8183 escrow on a local anvil chain, then checks:
@@ -96,7 +96,15 @@ The end-to-end run deploys the reference evaluator and a mock ERC-8183 escrow on
 - The same verdict sent again is refused (V7).
 - COULD_NOT_CHECK leaves the job open, and a later REJECT then decides it (V9).
 - These verdicts are refused: one replayed to another job, a high-s twin signature, one from an unregistered signer, an expired one, decision 4, and one replayed to a second deployment of the evaluator.
-- After a key is retired, verdicts signed before the retirement are still accepted. After a key is revoked, its verdicts are refused (V13).
+- A verdict recorded before a key is retired stays recorded. After the retirement the key settles nothing new, including a verdict dated inside its old window. After a key is revoked, its verdicts are refused (V13).
+
+### Key windows are judged by the chain's clock (V5, V13)
+
+`signedAt` is written by the signer, so it cannot prove when a verdict was signed. A retired key could otherwise date a new verdict inside its old window. `verifyVerdict` therefore judges the key window at `now`:
+- for a verdict you are about to submit, pass the expected submission time;
+- for a verdict already on chain, pass the timestamp of the block that recorded its hash (`VerdictRecorded`, or the escrow's `reason`).
+
+`buildRatings` does the same for off-chain records: give a record `anchoredAt` (the block time of a hash on chain that contains it), or it is judged at `asOf` (default: now), and an unanchored record of a retired key is excluded. Thanks to Douglas Borthwick for the report.
 
 ## License
 

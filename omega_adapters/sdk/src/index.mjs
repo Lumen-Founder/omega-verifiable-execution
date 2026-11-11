@@ -310,7 +310,10 @@ export function recoverVerdictSigner(domain, verdict, sig) {
 /**
  * Off-chain check of the rules a conforming evaluator applies on chain. Pass what you know:
  *  - key: {signer, validFrom, validUntil, compromised} as read from keys(keyId)  -> V4, V5 key window
- *  - now: unix seconds                                                          -> V5 time window
+ *  - now: unix seconds                                                          -> V5 time window, V13 key window
+ *    For a verdict about to be submitted, pass the expected submission time. For a verdict already recorded, pass the
+ *    timestamp of the block that recorded its hash (VerdictRecorded, or the escrow's reason). The key window is judged
+ *    at that time, never at signedAt: signedAt is written by the signer, so a retired key could backdate it.
  *  - escrow: the evaluator's escrow                                             -> V3
  * Returns {ok, digest, signer, failures: [{rule, reason}], notes: [...]}. It cannot check V6-V9 (escrow and job state).
  */
@@ -330,7 +333,13 @@ export function verifyVerdict({ domain, verdict, signature, key, now, escrow } =
     if (!signer || checksumAddress(key.signer) !== signer) failures.push({ rule: 'V4', reason: `recovered ${signer} is not the key's signer ${key.signer}` });
     const from = toBig(key.validFrom, 'key.validFrom');
     const until = toBig(key.validUntil, 'key.validUntil');
-    if (!(from <= v.signedAt && v.signedAt < until)) failures.push({ rule: 'V5', reason: `signedAt ${v.signedAt} outside key window [${from}, ${until})` });
+    if (v.signedAt < from) failures.push({ rule: 'V5', reason: `signedAt ${v.signedAt} is before the key's validFrom ${from}` });
+    // signedAt <= submission time, so signedAt >= validUntil can never be accepted
+    if (v.signedAt >= until) failures.push({ rule: 'V5', reason: `signedAt ${v.signedAt} is at or after the key's validUntil ${until}` });
+    if (now !== undefined) {
+      const t = toBig(now, 'now');
+      if (!(from <= t && t < until)) failures.push({ rule: 'V13', reason: `key not valid at ${t} (window [${from}, ${until}); judged at submission or recording time, not at signedAt)` });
+    } else notes.push('no time given: key retirement not checked (pass now = submission time, or the block time that recorded the verdict)');
     if (key.compromised) failures.push({ rule: 'V5', reason: 'key is revoked (compromised)' });
   } else notes.push('no key given: signer not compared with keys(keyId)');
   if (now !== undefined) {

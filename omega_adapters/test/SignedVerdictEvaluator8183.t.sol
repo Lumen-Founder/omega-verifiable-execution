@@ -206,11 +206,32 @@ contract SignedVerdictEvaluator8183Test {
         _fail(ev, v, PK, E.NotYetSigned.selector);
     }
 
-    function test_retired_key_keeps_earlier_signatures() public {
+    // Reported by Douglas Borthwick (ethereum-magicians 27902): the key window used to be checked against the
+    // signer-written signedAt, so a retired key could backdate a new verdict into its old window. The clock is 5_000.
+    function test_retired_key_refuses_backdated_verdict() public {
         vm.prank(ADMIN);
-        ev.retireKey(K1, 4_500); // retired after the verdict was signed at 4_000
+        ev.retireKey(K1, 4_500); // retired before now; the verdict claims signedAt 4_000, inside the old window
+        _fail(ev, _v(job, 1), PK, E.KeyNotValid.selector);
+        require(_status(acp, job) == 2, "job still Submitted");
+    }
+
+    function test_verdict_recorded_before_retirement_stays_valid() public {
         _send(ev, _v(job, 1), PK);
-        require(_status(acp, job) == 3, "historical signature valid");
+        vm.prank(ADMIN);
+        ev.retireKey(K1, 5_000); // retired after the verdict was recorded on chain
+        require(_status(acp, job) == 3, "recorded verdict unaffected");
+        bytes32 d = ev.digestOf(_v(job, 1));
+        require(ev.seen(d) && ev.decided(job) == d, "record kept");
+    }
+
+    function test_retirement_in_future_takes_effect_at_its_time() public {
+        vm.prank(ADMIN);
+        ev.retireKey(K1, 6_000);
+        vm.warp(6_000); // signedAt 4_000 and expiresAt 9_000 still fine; the key is not
+        _fail(ev, _v(job, 1), PK, E.KeyNotValid.selector);
+        vm.warp(5_999);
+        _send(ev, _v(job, 1), PK);
+        require(_status(acp, job) == 3, "accepted one second before retirement");
     }
 
     function test_retired_key_refuses_later_signatures() public {

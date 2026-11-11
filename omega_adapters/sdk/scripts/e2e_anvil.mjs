@@ -125,13 +125,21 @@ try {
   check('job 3 still Submitted after all refusals', (await status(j3)) === 2);
   check('valid verdict for job 3 then accepted', (await sendRaw(S.submitVerdictTx(evaluator, v3, s3), RELAYER)) === 'ok' && (await status(j3)) === 3);
 
-  // V13 retire keeps old verdicts acceptable, revoke kills them
+  // V13 a verdict recorded before retirement stays recorded; after retirement the key settles nothing new, even a
+  // verdict signed (and dated) before the retirement; revoke kills everything
   const j5 = await newJob();
   const v5 = verdict(j5, S.COMPLETE);
   const s5 = S.signVerdict(domain, v5, RATER);
+  check('V13 before retire, verdict accepted', (await sendRaw(S.submitVerdictTx(evaluator, v5, s5), RELAYER)) === 'ok' && (await status(j5)) === 3);
+  const j6 = await newJob();
+  const v6 = verdict(j6, S.COMPLETE); // signedAt now-10, inside the window that is about to close
+  const s6 = S.signVerdict(domain, v6, RATER);
   await send(evaluator, EV.abi, 'retireKey', [keyId, now], ADMIN);
   const kRet = await S.readKey(provider, evaluator, keyId);
-  check('V13 after retire, verdict signed before validUntil still accepted', kRet.validUntil === now && S.verifyVerdict({ domain, verdict: v5, signature: s5, key: kRet, now }).ok && (await sendRaw(S.submitVerdictTx(evaluator, v5, s5), RELAYER)) === 'ok');
+  const tRet = BigInt((await provider.request({ method: 'eth_getBlockByNumber', params: ['latest', false] })).timestamp);
+  check('V13 after retire, earlier-dated verdict refused on chain and off chain; recorded job 5 unchanged',
+    kRet.validUntil === now && !S.verifyVerdict({ domain, verdict: v6, signature: s6, key: kRet, now: tRet }).ok &&
+      (await sendRaw(S.submitVerdictTx(evaluator, v6, s6), RELAYER)) === 'revert' && (await status(j5)) === 3 && (await status(j6)) === 2);
   const v4b = verdict(j4, S.COMPLETE);
   const s4b = S.signVerdict(domain, v4b, RATER);
   await send(evaluator, EV.abi, 'revokeKey', [keyId], ADMIN);

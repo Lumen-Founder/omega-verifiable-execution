@@ -149,6 +149,11 @@ test('verifyVerdict accepts a good verdict and names each broken rule', () => {
   assert.deepEqual(rules(S.verifyVerdict({ domain: D, verdict: V, signature: sig, now: 3999 })), ['V5']);
   assert.deepEqual(rules(S.verifyVerdict({ domain: D, verdict: V, signature: sig, key: { ...KEY, validUntil: 4000n } })), ['V5']);
   assert.deepEqual(rules(S.verifyVerdict({ domain: D, verdict: V, signature: sig, key: { ...KEY, compromised: true } })), ['V5']);
+  // V13 a retired key cannot backdate: retired at 4500, signedAt 4000 claims the old window, judged at now 5000
+  const retired = { ...KEY, validUntil: 4500n };
+  assert.deepEqual(rules(S.verifyVerdict({ domain: D, verdict: V, signature: sig, key: retired, now: 5000 })), ['V13']);
+  assert.equal(S.verifyVerdict({ domain: D, verdict: V, signature: sig, key: retired, now: 4499 }).ok, true);
+  assert.ok(S.verifyVerdict({ domain: D, verdict: V, signature: sig, key: retired }).notes.some((n) => n.includes('retirement not checked')));
   // V10 bad decision
   const bad = { ...V, decision: 4 };
   assert.deepEqual(rules(S.verifyVerdict({ domain: D, verdict: bad, signature: S.signVerdict(D, bad, PK), key: KEY })), ['V10']);

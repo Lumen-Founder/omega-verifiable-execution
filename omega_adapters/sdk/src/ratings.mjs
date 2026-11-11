@@ -24,13 +24,19 @@ function lowerKeys(keys) {
 }
 
 /**
+ * A record's own signedAt cannot fix when it was signed: the only witness is the key itself, so a retired key could
+ * backdate it. Each record's key window is therefore judged at a time the signer does not control: the record's
+ * `anchoredAt` (timestamp of the block that carried its hash, e.g. VerdictRecorded, an escrow reason or an on-chain
+ * log head) when given, otherwise `asOf` (default: now). An unanchored record of a retired key is excluded.
  * @param {object} args
- * @param {Array<{domain, verdict, signature}>} [args.records] signed verdicts
+ * @param {Array<{domain, verdict, signature, anchoredAt?}>} [args.records] signed verdicts
  * @param {Record<string, {signer, validFrom, validUntil, compromised}>} [args.keys] keyId -> key record (for records)
  * @param {Array<{jobId, digest, keyId, decision, deliverableHash, escrow, source}>} [args.logs] decoded chain logs
+ * @param {number|bigint} [args.asOf] unix seconds at which unanchored records' keys are judged (default: now)
  * @returns {{format, ratings, excluded, counts}}
  */
-export function buildRatings({ records = [], keys = {}, logs = [] } = {}) {
+export function buildRatings({ records = [], keys = {}, logs = [], asOf } = {}) {
+  const at = BigInt(asOf ?? Math.floor(Date.now() / 1000));
   const K = lowerKeys(keys);
   const accepted = [];
   const excluded = [];
@@ -51,6 +57,12 @@ export function buildRatings({ records = [], keys = {}, logs = [] } = {}) {
     const res = verifyVerdict({ domain: rec.domain, verdict: v, signature: rec.signature, key });
     if (!res.ok) {
       excluded.push({ source: `record:${i}`, keyId: v.keyId, digest: res.digest, reason: res.failures.map((f) => `${f.rule} ${f.reason}`).join('; ') });
+      return;
+    }
+    const t = rec.anchoredAt !== undefined ? BigInt(rec.anchoredAt) : at;
+    if (!(BigInt(key.validFrom) <= t && t < BigInt(key.validUntil))) {
+      const when = rec.anchoredAt !== undefined ? `anchored at ${t}` : `not anchored on chain, judged as of ${t}`;
+      excluded.push({ source: `record:${i}`, keyId: v.keyId, digest: res.digest, reason: `V13 key not valid (${when})` });
       return;
     }
     if (v.decision === COULD_NOT_CHECK) {
@@ -92,6 +104,7 @@ export function buildRatings({ records = [], keys = {}, logs = [] } = {}) {
   ratings.sort((a, b) => (a.item + a.rater < b.item + b.rater ? -1 : 1));
   return {
     format: RATINGS_FORMAT,
+    asOf: at.toString(),
     ratings,
     excluded,
     counts: { records: records.length, logs: logs.length, ratings: ratings.length, excluded: excluded.length, couldNotCheck },

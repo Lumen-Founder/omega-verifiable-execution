@@ -1,7 +1,7 @@
 # Run the ERC-8183 Evaluator Verdicts conformance suite in your own CI
 
 The suite checks an evaluator against requirements V1–V15 of the Evaluator Verdicts draft (`../../spec/`), on the real
-erc-8183/base-contracts escrow (142e669c, deployed behind a proxy inside the test). 25 tests. You write four small
+erc-8183/base-contracts escrow (142e669c, deployed behind a proxy inside the test). 27 tests. You write four small
 adapter functions; nothing else in your repository changes.
 
 ## Steps
@@ -28,6 +28,10 @@ adapter functions; nothing else in your repository changes.
 From an empty project with the dependency pinned to commit `cd053d2` (already public), steps 1–4 unchanged gave
 25/25 with forge 1.5.1-stable on Windows. The GitHub workflow itself has not run yet; it uses the standard
 `foundry-rs/foundry-toolchain` action.
+
+V13 changed on 2026-11-12: a key's window is now judged at `block.timestamp`, not at the signer-written `signedAt`
+(see the spec). The suite went from 25 to 27 tests. A CI pinned to `cd053d2` or `795ac2f` still runs the old V13, which
+accepts a retired key's backdated verdict; move the pin forward.
 
 ## If your evaluator differs
 

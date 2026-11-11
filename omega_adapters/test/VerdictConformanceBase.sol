@@ -295,10 +295,28 @@ abstract contract VerdictConformanceBase {
         _setKey(ev, keyId, signer, 0, 1);
     }
 
-    function test_V13_retire_keeps_earlier_signatures() public {
-        _retireKey(ev, K1, T0 - 500); // verdict signed at T0-1000
+    /// V13: a retired key settles nothing new, whatever signedAt it writes (backdating into the old window).
+    function test_V13_retired_key_refuses_backdated_verdict() public {
+        _retireKey(ev, K1, T0 - 500); // now is T0; the verdict claims signedAt T0-1000, inside the old window
+        _revertsSigned(ev, _v(job, 1), PK);
+        require(_status(job) == ST_SUBMITTED, "V13 job untouched");
+    }
+
+    /// V13: a verdict recorded on chain before the retirement stays valid.
+    function test_V13_recorded_verdict_survives_retirement() public {
+        bytes32 d = _ok(ev, _v(job, 1), PK);
+        _retireKey(ev, K1, T0);
+        require(_status(job) == ST_COMPLETED && ev.seen(d), "V13 earlier record valid");
+    }
+
+    /// V5/V13: the key window is judged at block.timestamp, so a retirement set in the future takes effect at its time.
+    function test_V13_retirement_takes_effect_at_its_time() public {
+        _retireKey(ev, K1, T0 + 100);
+        vm.warp(T0 + 100);
+        _revertsSigned(ev, _v(job, 1), PK);
+        vm.warp(T0 + 99);
         _ok(ev, _v(job, 1), PK);
-        require(_status(job) == ST_COMPLETED, "V13 earlier signature valid");
+        require(_status(job) == ST_COMPLETED, "V13 accepted before retirement time");
     }
 
     function test_V13_retire_refuses_later_signatures() public {

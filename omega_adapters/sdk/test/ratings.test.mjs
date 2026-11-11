@@ -47,6 +47,19 @@ test('verified records become ratings; every exclusion is reported with its reas
   assert.ok(out2.excluded.every((e) => e.reason.includes('V5')));
 });
 
+test('a retired key cannot backdate records: the key window is judged at the anchor time, else at asOf', () => {
+  const retiredKeys = { ...keys, [keyId(1)]: { ...keys[keyId(1)], validUntil: 4500 } }; // retired at 4500
+  const r = rec(1, 8, 1); // claims signedAt 4000, inside the old window
+  const unanchored = buildRatings({ records: [r], keys: retiredKeys, asOf: 5000 });
+  assert.equal(unanchored.ratings.length, 0);
+  assert.equal(unanchored.asOf, '5000');
+  assert.ok(unanchored.excluded[0].reason.startsWith('V13 key not valid (not anchored'));
+  const lateAnchor = buildRatings({ records: [{ ...r, anchoredAt: 4600 }], keys: retiredKeys, asOf: 5000 });
+  assert.equal(lateAnchor.ratings.length, 0, 'hash first on chain after retirement');
+  const earlyAnchor = buildRatings({ records: [{ ...r, anchoredAt: 4400 }], keys: retiredKeys, asOf: 5000 });
+  assert.equal(earlyAnchor.ratings.length, 1, 'hash on chain before retirement: stays valid');
+});
+
 test('the same verdict from a record and from a chain log counts once; agreeing duplicates merge', () => {
   const a = rec(1, 7, 1);
   const digest = S.hashVerdict(D, a.verdict);

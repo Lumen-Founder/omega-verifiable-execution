@@ -34,7 +34,7 @@ contract SignedVerdictEvaluator8183 is IERC8183VerdictEvaluator {
     struct Key {
         address signer;
         uint64 validFrom;
-        uint64 validUntil; // retire: signatures made before this stay valid
+        uint64 validUntil; // retire: from this time the key settles nothing new; verdicts recorded before it stay valid
         bool compromised; // revoke: every signature by this key is refused
     }
 
@@ -132,7 +132,13 @@ contract SignedVerdictEvaluator8183 is IERC8183VerdictEvaluator {
         if (block.timestamp > v.expiresAt) revert Expired();
         if (v.signedAt > block.timestamp) revert NotYetSigned();
         Key memory k = keys[v.keyId];
-        if (k.signer == address(0) || k.compromised || v.signedAt < k.validFrom || v.signedAt >= k.validUntil) {
+        // V5/V13: the key must be valid NOW (block.timestamp), not at v.signedAt. signedAt is written by the signer, so a
+        // window checked against it binds only an honest signer: a retired key could backdate a new verdict into its old
+        // window. With validFrom <= signedAt <= block.timestamp < validUntil a retired key settles nothing new, whatever
+        // date it writes; verdicts recorded before the retirement stay valid because the chain fixed when they existed.
+        if (
+            k.signer == address(0) || k.compromised || v.signedAt < k.validFrom || block.timestamp >= k.validUntil
+        ) {
             revert KeyNotValid();
         }
         digest = digestOf(v);

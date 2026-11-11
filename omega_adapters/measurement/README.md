@@ -22,7 +22,7 @@ How the evaluator acts:
 - `COULD_NOT_CHECK` is recorded and changes nothing. The job can still expire to a refund, so silence stays the evaluator's own failure.
 
 How keys work:
-- `retireKey` keeps signatures made before the retirement valid, so disputes over old jobs remain checkable after rotation.
+- `retireKey` stops the key from settling anything new, whatever date its verdicts carry. Verdicts recorded on chain before the retirement stay valid, judged by the block that recorded them, so disputes over old jobs remain checkable after rotation.
 - `revokeKey` (compromise) refuses every signature by that key.
 - A key id is never reused for another signer.
 
